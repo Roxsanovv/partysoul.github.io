@@ -65,13 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Явно останавливаем видео
         video.pause();
         
-        // Сбрасываем позицию воспроизведения
-        video.currentTime = 0;
-        
         // Запрещаем автовоспроизведение через JS
         video.autoplay = false;
-        
-        // Дополнительная защита от автозагрузки
-        video.preload = 'none';
     });
 });
