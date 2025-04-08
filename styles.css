@@ -188,4 +188,14 @@ footer {
     nav ul li {
         margin: 0.3rem 0;
     }
-}   
+}
+
+video {
+    /* Отключает некоторые виды предзагрузки */
+    content-visibility: auto;
+    contain: strict;
+    /* Стили для лучшего отображения */
+    background: #000;
+    display: block;
+    max-width: 100%;
+}
