@@ -189,12 +189,3 @@ footer {
         margin: 0.3rem 0;
     }
 }
-
-video {
-    /* Отключает некоторые виды предзагрузки */
-    content-visibility: auto;
-    contain: strict;
-    /* Стили для лучшего отображения */
-    display: block;
-    max-width: 100%;
-}
