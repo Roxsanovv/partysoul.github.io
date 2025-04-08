@@ -60,10 +60,6 @@ function setActiveNavLink(activeLink) {
 document.addEventListener('DOMContentLoaded', function() {
     // Остановка всех видео на странице
     const videos = document.querySelectorAll('video');
-    
-    videos.forEach(video => {
-        // Явно останавливаем видео
-        video.pause();
         
         // Запрещаем автовоспроизведение через JS
         video.autoplay = false;
