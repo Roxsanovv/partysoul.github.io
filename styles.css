@@ -195,7 +195,6 @@ video {
     content-visibility: auto;
     contain: strict;
     /* Стили для лучшего отображения */
-    background: #000;
     display: block;
     max-width: 100%;
 }
