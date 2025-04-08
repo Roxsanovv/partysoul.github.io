@@ -56,3 +56,12 @@ function setActiveNavLink(activeLink) {
     // Добавить активный класс к выбранной ссылке
     activeLink.classList.add('active');
 }
+
+// Отключение автовоспроизведения для всех iframe
+document.querySelectorAll('iframe').forEach(iframe => {
+    const src = iframe.getAttribute('src');
+    // Убедимся, что параметр autoplay отключен
+    if (src.includes('youtube') && !src.includes('autoplay=0')) {
+        iframe.setAttribute('src', src.split('?')[0] + '?autoplay=0');
+    }
+});
