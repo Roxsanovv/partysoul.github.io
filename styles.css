@@ -117,7 +117,7 @@ h2 {
     overflow: hidden;
 }
 
-.video-container iframe {
+.video-container video {
     position: absolute;
     top: 0;
     left: 0;
