@@ -56,3 +56,22 @@ function setActiveNavLink(activeLink) {
     // Добавить активный класс к выбранной ссылке
     activeLink.classList.add('active');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Остановка всех видео на странице
+    const videos = document.querySelectorAll('video');
+    
+    videos.forEach(video => {
+        // Явно останавливаем видео
+        video.pause();
+        
+        // Сбрасываем позицию воспроизведения
+        video.currentTime = 0;
+        
+        // Запрещаем автовоспроизведение через JS
+        video.autoplay = false;
+        
+        // Дополнительная защита от автозагрузки
+        video.preload = 'none';
+    });
+});
