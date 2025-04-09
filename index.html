@@ -5,19 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Газета "Душа компании"</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="ico/logo.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
-        <div class="logo">Душа компании</div>
-        <div class="slogan">Официальная газета нашей дружной компании</div>
+        <div class="header-content">
+            <div class="logo">Душа компании</div>
+            <div class="slogan">Официальная газета нашей компании</div>
+        </div>
+        <div class="header-accent"></div>
     </header>
     
     <nav>
         <ul>
-            <li><a href="#home" class="nav-link">Главная</a></li>
+            <li><a href="#home" class="nav-link active">Главная</a></li>
             <li><a href="#news" class="nav-link">Новости</a></li>
             <li><a href="#articles" class="nav-link">Статьи</a></li>
-            <li><a href="#gallery" class="nav-link">Галерея</a></li>
+            <li><a href="#gallery" class="nav-link">Фотоотчеты</a></li>
             <li><a href="#videos" class="nav-link">Видео</a></li>
             <li><a href="#add-material" class="nav-link">Добавить материал</a></li>
         </ul>
@@ -27,37 +32,43 @@
         <main class="main-content">
             <!-- Домашняя страница -->
             <section id="home" class="content-section">
-                <h2>Последние публикации</h2>
+                <h2><span>Последние публикации</span></h2>
                 <article class="article">
                     <h3>Публичное выступление</h3>
                     <div class="article-meta">Опубликовано: 6 апреля 2025 | Автор: Дябденко Богдан</div>
-                    <p>В минувшую пятницу в школе №1502 (Энергия) публично выступил Дябденко Б.К., поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
-                        6 бутылок кваса пронесли в школу Дябденко Богдан и его друзья, до выступления они выпили одну из них. По словам самого Богдана они просто не устояли перед квасом и выпили одну из бутылок.</p>
+                    <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
+                        Шесть бутылок кваса пронесли в школу Дябденко Богдан и его друзья; до выступления они выпили одну из них. По словам самого Богдана, они просто не устояли перед квасом и выпили одну из бутылок.</p>
                     
                     <div class="video-container">
-                        <video controls width="100%" preload="auto"><source src="video/video_2025-04-06_23-25-54.webm" type="video/webm"></video>
+                        <video controls poster="img/poster/videoframe_26.jpg">
+                            <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                        </video>
                     </div>
                 </article>
             </section>
             
             <!-- Новости -->
             <section id="news" class="content-section hidden">
-                <h2>Новости</h2>
+                <h2><span>Новости</span></h2>
                 <article class="article">
                     <h3>Публичное выступление</h3>
                     <div class="article-meta">Опубликовано: 6 апреля 2025 | Автор: Дябденко Богдан</div>
-                    <p>В минувшую пятницу в школе №1502 (Энергия) публично выступил Дябденко Б.К., поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
-                        6 бутылок кваса пронесли в школу Дябденко Богдан и его друзья, до выступления они выпили одну из них. По словам самого Богдана они просто не устояли перед квасом и выпили одну из бутылок.</p>
+                    <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
+                        Шесть бутылок кваса пронесли в школу Дябденко Богдан и его друзья; до выступления они выпили одну из них. По словам самого Богдана, они просто не устояли перед квасом и выпили одну из бутылок.</p>
                     <div class="video-container">
-                        <video controls width="100%" preload="auto"><source src="video/video_2025-04-06_23-25-54.webm" type="video/webm"></video>
+                        <video controls poster="img/poster/videoframe_26.jpg">
+                            <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                        </video>
                     </div>
-                    <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 1">
+                    <div class="image-container">
+                        <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 1">
+                    </div>
                 </article>
             </section>
             
             <!-- Статьи -->
             <section id="articles" class="content-section hidden">
-                <h2>Статьи</h2>
+                <h2><span>Статьи</span></h2>
                 <article class="article">
                     <p>Тут пока что пусто 😔.</p>
                 </article>
@@ -65,62 +76,159 @@
             
             <!-- Галерея -->
             <section id="gallery" class="content-section hidden">
-                <h2>Галерея</h2>
+                <h2><span>Фотоотчеты</span></h2>
                 <div class="gallery-grid">
-                    <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 1">
-                    <img src="img/photo_2025-04-08_21-45-35.jpg" alt="Фото 2">
-                    <img src="img/photo_2025-04-09_19-34-08.jpg" alt="Фото 3">
-                    <img src="img/photo_2025-04-09_19-34-14.jpg" alt="Фото 4">
+                    <div class="gallery-item">
+                        <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 1">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="img/photo_2025-04-08_21-45-35.jpg" alt="Фото 2">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="img/photo_2025-04-08_21-45-35.jpg" alt="Фото 3">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="img/photo_2025-04-09_19-34-14.jpg" alt="Фото 4">
+                    </div>
                 </div>
             </section>
             
             <!-- Видео -->
             <section id="videos" class="content-section hidden">
-                <h2>Видеорепортажи</h2>
-                <div class="video-container">
-                    <video controls width="100%" preload="auto"><source src="video/video_2025-04-06_23-25-54.webm" type="video/webm"></video>
+                <h2><span>Видеорепортажи</span></h2>
+                <div class="video-list">
+                    <div class="video-item">
+                        <h3>Публичное выступление</h3>
+                        <div class="video-container small">
+                            <video controls poster="img/poster/videoframe_26.jpg">
+                                <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <p>Публичное выступление в честь начала школьных каникул.</p>
+                    </div>
                 </div>
             </section>
             
             <!-- Добавить материал -->
             <section id="add-material" class="content-section hidden">
-                <h2>Добавить материал</h2>
-                <p>Чтобы добавить материал в газету, отправьте свой материал в нашу Telegram группу - <a href="https://t.me/+rAam8JzTMBRkNDEy" class="sidebar-link">https://t.me/+rAam8JzTMBRkNDEy</a>.</p>
+                <h2><span>Добавить материал</span></h2>
+                <div class="form-container">
+                    <p>Вы можете предложить свой материал для публикации в нашей газете. Заполните форму в нашей Telegram группе: <a href="telegram-link">https://t.me/+rAam8JzTMBRkNDEy</a></p>
+                </div>
             </section>
         </main>
         
         <aside class="sidebar">
-            <section>
-                <h2>Последние новости</h2>
+            <section class="sidebar-section">
+                <h2><span>Последние новости</span></h2>
                 <div class="article">
                     <h3>Публичное выступление</h3>
                     <div class="article-meta">6 апреля 2025</div>
-                    <p>В минувшую пятницу в школе №1502 (Энергия) публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
-                        6 бутылок кваса пронесли в школу Дябденко Богдан и его друзья, до выступления они выпили одну из них. По словам самого Богдана они просто не устояли перед квасом и выпили одну из бутылок.</p>
+                    <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями...</p>
+                    <a href="#news" class="read-more">Читать далее →</a>
                 </div>
             </section>
             
-            <section>
-                <h2>Фотогалерея</h2>
-                <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 1" style="width: 150px; height: auto;">
-                <img src="img/photo_2025-04-08_21-45-35.jpg" alt="Фото 2" style="width: 150px; height: auto;">
-                <img src="img/photo_2025-04-09_19-34-08.jpg" alt="Фото 3" style="width: 150px; height: auto;">
-                <img src="img/photo_2025-04-09_19-34-14.jpg" alt="Фото 4" style="width: 150px; height: auto;">
-                <a href="#gallery" class="sidebar-link">Все фото</a>
+            <section class="sidebar-section">
+                <h2><span>Фотогалерея</span></h2>
+                <div class="sidebar-gallery">
+                    <div class="gallery-item">
+                        <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 1">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="img/photo_2025-04-08_21-45-35.jpg" alt="Фото 2">
+                    </div>
+                </div>
+                <a href="#gallery" class="sidebar-link">Все фото →</a>
             </section>
             
-            <section>
-                <h2>Видеоархив</h2>
+            <section class="sidebar-section">
+                <h2><span>Видеоархив</span></h2>
                 <div class="video-container">
-                    <video controls width="100%" preload="auto"><source src="video/video_2025-04-06_23-25-54.webm" type="video/webm"></video>
+                    <video controls poster="img/poster/videoframe_26.jpg">
+                        <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                    </video>
                 </div>
-                <a href="#videos" class="sidebar-link">Все видео</a>
+                <a href="#videos" class="sidebar-link">Все видео →</a>
             </section>
+
+            <!-- <section class="sidebar-section">
+                <h2><span>Календарь</span></h2>
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <span>Май 2023</span>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="day-name">Пн</div>
+                        <div class="day-name">Вт</div>
+                        <div class="day-name">Ср</div>
+                        <div class="day-name">Чт</div>
+                        <div class="day-name">Пт</div>
+                        <div class="day-name">Сб</div>
+                        <div class="day-name">Вс</div>
+                        
+                        <div class="day">1</div>
+                        <div class="day">2</div>
+                        <div class="day">3</div>
+                        <div class="day">4</div>
+                        <div class="day">5</div>
+                        <div class="day">6</div>
+                        <div class="day">7</div>
+                        <div class="day">8</div>
+                        <div class="day">9</div>
+                        <div class="day">10</div>
+                        <div class="day">11</div>
+                        <div class="day">12</div>
+                        <div class="day">13</div>
+                        <div class="day">14</div>
+                        <div class="day">15</div>
+                        <div class="day">16</div>
+                        <div class="day">17</div>
+                        <div class="day">18</div>
+                        <div class="day">19</div>
+                        <div class="day event">20</div>
+                        <div class="day">21</div>
+                        <div class="day">22</div>
+                        <div class="day event">23</div>
+                        <div class="day">24</div>
+                        <div class="day">25</div>
+                        <div class="day">26</div>
+                        <div class="day">27</div>
+                        <div class="day event">28</div>
+                        <div class="day">29</div>
+                        <div class="day">30</div>
+                        <div class="day">31</div>
+                    </div>
+                </div>
+                <div class="event-info">
+                    <p><strong>20 мая</strong> - Собрание родителей</p>
+                    <p><strong>23 мая</strong> - Последний звонок</p>
+                    <p><strong>28 мая</strong> - Выпускной вечер</p>
+                </div>
+            </section> -->
         </aside>
     </div>
     
     <footer>
-        <p>© 2025 Газета "Душа компании". Все права защищены.</p>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>О газете</h3>
+                <p>Газета "Душа компании" публикуется с 2025 года. Мы освещаем самые важные события нашей дружной компании.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Контакты</h3>
+                <p>Тут пока что пусто 😔.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Редакция</h3>
+                <p>Главный редактор: <b>Немятов А.А.</b></p>
+                <p>Ответственный за выпуски: <b>Дябденко Б.К.</b></p>
+                <p>Технический редактор: <b>Немятов А.А.</b></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Газета "Душа компании". Все права защищены.</p>
+        </div>
     </footer>
     
     <script src="script.js"></script>
