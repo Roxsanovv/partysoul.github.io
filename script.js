@@ -134,6 +134,13 @@ function initVideos() {
                 this.controls = false;
             }
         });
+
+        video.addEventListener('progress', function() {
+            if (video.buffered.length > 0) {
+                const percent = (video.buffered.end(0) / video.duration) * 100;
+                progressBar.style.width = `${percent}%`;
+            }
+        });
         
         // Автопауза при скролле
         window.addEventListener('scroll', function() {
