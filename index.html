@@ -6,156 +6,245 @@
     <title>Газета «Душа компании»</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="ico/logo.ico" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <header>
-        <div class="header-content">
-            <div class="logo">«Душа компании»</div>
-            <div class="slogan">Официальная газета нашей компании</div>
+<body class="dark-theme">
+    <!-- Header -->
+    <header class="header-modern">
+        <div class="header-top">
+            <div class="header-top-container">
+                <div class="header-social">
+                    <a href="https://t.me/+rAam8JzTMBRkNDEy"><i class="fab fa-telegram"></i></a>
+                </div>
+                <div class="header-date">
+                    <i class="far fa-calendar"></i> 
+                    <span id="current-date"></span>
+                </div>
+            </div>
         </div>
+        
+        <div class="header-main">
+            <div class="header-main-container">
+                <div class="logo-modern">
+                    <div class="logo">«Душа компании»</div>
+                    <div class="slogan">Официальная газета нашей компании</div>
+                </div>
+            </div>
+        </div>
+        
         <div class="header-accent"></div>
     </header>
     
-    <nav>
-        <ul>
-            <li><a href="#home" class="nav-link active">Главная</a></li>
-            <li><a href="#news" class="nav-link">Новости</a></li>
-            <li><a href="#articles" class="nav-link">Статьи</a></li>
-            <li><a href="#gallery" class="nav-link">Фотогалерея</a></li>
-            <li><a href="#videos" class="nav-link">Видео</a></li>
-            <li><a href="#add-material" class="nav-link">Добавить материал</a></li>
-        </ul>
+    <!-- Navigation -->
+    <nav id="main-nav">
+        <div class="nav-container">
+            <ul>
+                <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i><span>Главная</span></a></li>
+                <li><a href="#news" class="nav-link"><i class="fas fa-newspaper"></i><span>Новости</span></a></li>
+                <li><a href="#articles" class="nav-link"><i class="fas fa-pen"></i><span>Статьи</span></a></li>
+                <li><a href="#gallery" class="nav-link"><i class="fas fa-images"></i><span>Галерея</span></a></li>
+                <li><a href="#videos" class="nav-link"><i class="fas fa-video"></i><span>Видео</span></a></li>
+                <li><a href="#add-material" class="nav-link cta-button"><i class="fas fa-plus"></i><span>Добавить материал</span></a></li>
+            </ul>
+        </div>
     </nav>
     
+    <!-- Main Content -->
     <div class="container">
         <main class="main-content">
-            <!-- Домашняя страница -->
+            <!-- Home Section -->
             <section id="home" class="content-section">
-                <h2><span>Последние публикации</span></h2>
-                <article class="article">
-                    <h3>Пребывание в лагере</h3>
-                    <div class="article-meta">Опубликовано: 20 апреля 2025 | Автор: Иванова Анастасия</div>
-                    <p>С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена». Программа смены включала образовательные лекции, творческие мастер-классы и спортивные мероприятия.
-                    <p>Особый интерес Анастасия проявила к танцам, активно участвуя в культурной жизни лагеря. Также она попробовала себя в декоративно-прикладном искусстве — расписала подносы, которые позже были вручены вожатым в качестве памятных подарков.</p>
-                    <p>По словам участницы, эта смена стала для нее полезным и ярким опытом, позволившим приобрести новые знания и навыки.</p>
-                    
-                    <div class="image-container">
-                        <img src="img/podnos.jpg">
+                <div class="section-header">
+                    <h2>Последние публикации</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <article class="article card">
+                    <div class="article-header">
+                        <h3>Пребывание в лагере</h3>
+                        <div class="article-meta">
+                            <span class="date"><i class="far fa-calendar"></i> 20 апреля 2025</span>
+                            <span class="author"><i class="far fa-user"></i> Иванова Анастасия</span>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <p>С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена». Программа смены включала образовательные лекции, творческие мастер-классы и спортивные мероприятия.</p>
+                        <p>Особый интерес Анастасия проявила к танцам, активно участвуя в культурной жизни лагеря. Также она попробовала себя в декоративно-прикладном искусстве — расписала подносы, которые позже были вручены вожатым в качестве памятных подарков.</p>
+                        <p>По словам участницы, эта смена стала для нее полезным и ярким опытом, позволившим приобрести новые знания и навыки.</p>
+                    </div>
+                    <div class="article-media">
+                        <div class="image-container">
+                            <img src="img/podnos.jpg" alt="Расписные подносы">
+                        </div>
                     </div>
                 </article>
                 
-                <article class="article">
-                    <h3>Публичное выступление</h3>
-                    <div class="article-meta">Опубликовано: 6 апреля 2025 | Автор: Дябденко Богдан</div>
-                    <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
-                        Шесть бутылок кваса пронесли в школу Дябденко Богдан и его друзья; до выступления они выпили одну из них. По словам самого Богдана, они просто не устояли перед квасом и выпили одну из бутылок.</p>
-                    
-                    <div class="video-container">
-                        <video controls poster="img/poster/videoframe_26.jpg">
-                            <source src="video/video_2025-04-06_23-25-54.webm" type="video/webm">
-                        </video>
+                <article class="article card">
+                    <div class="article-header">
+                        <h3>Публичное выступление</h3>
+                        <div class="article-meta">
+                            <span class="date"><i class="far fa-calendar"></i> 6 апреля 2025</span>
+                            <span class="author"><i class="far fa-user"></i> Дябденко Богдан</span>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.</p>
+                        <p>Шесть бутылок кваса пронесли в школу Дябденко Богдан и его друзья; до выступления они выпили одну из них. По словам самого Богдана, они просто не устояли перед квасом и выпили одну из бутылок.</p>
+                    </div>
+                    <div class="article-media">
+                        <div class="video-container">
+                            <video controls poster="img/poster/videoframe_26.jpg" preload="metadata">
+                                <source src="video/video_2025-04-06_23-25-54.webm" type="video/webm">
+                                <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                                Ваш браузер не поддерживает видео тег.
+                            </video>
+                        </div>
                     </div>
                 </article>
             </section>
             
-            <!-- Новости -->
+            <!-- News Section -->
             <section id="news" class="content-section hidden">
-                <h2><span>Новости</span></h2>
-                <article class="article">
-                    <h3>Пребывание в лагере</h3>
-                    <div class="article-meta">Опубликовано: 20 апреля 2025 | Автор: Иванова Анастасия</div>
-                    <p>С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена». Программа смены включала образовательные лекции, творческие мастер-классы и спортивные мероприятия.
-                    <p>Особый интерес Анастасия проявила к танцам, активно участвуя в культурной жизни лагеря. Также она попробовала себя в декоративно-прикладном искусстве — расписала подносы, которые позже были вручены вожатым в качестве памятных подарков.</p>
-                    <p>По словам участницы, эта смена стала для нее полезным и ярким опытом, позволившим приобрести новые знания и навыки.</p>
-                    
-                    <div class="image-container">
-                        <img src="img/podnos.jpg">
+                <div class="section-header">
+                    <h2>Новости</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <article class="article card">
+                    <div class="article-header">
+                        <h3>Пребывание в лагере</h3>
+                        <div class="article-meta">
+                            <span class="date"><i class="far fa-calendar"></i> 20 апреля 2025</span>
+                            <span class="author"><i class="far fa-user"></i> Иванова Анастасия</span>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <p>С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена». Программа смены включала образовательные лекции, творческие мастер-классы и спортивные мероприятия.</p>
+                        <p>Особый интерес Анастасия проявила к танцам, активно участвуя в культурной жизни лагеря. Также она попробовала себя в декоративно-прикладном искусстве — расписала подносы, которые позже были вручены вожатым в качестве памятных подарков.</p>
+                        <p>По словам участницы, эта смена стала для нее полезным и ярким опытом, позволившим приобрести новые знания и навыки.</p>
+                    </div>
+                    <div class="article-media">
+                        <div class="image-container">
+                            <img src="img/podnos.jpg" alt="Расписные подносы">
+                        </div>
                     </div>
                 </article>
                 
-                <article class="article">
-                    <h3>Публичное выступление</h3>
-                    <div class="article-meta">Опубликовано: 6 апреля 2025 | Автор: Дябденко Богдан</div>
-                    <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.
-                        Шесть бутылок кваса пронесли в школу Дябденко Богдан и его друзья; до выступления они выпили одну из них. По словам самого Богдана, они просто не устояли перед квасом и выпили одну из бутылок.</p>
-                    <div class="video-container">
-                        <video controls poster="img/poster/videoframe_26.jpg">
-                            <source src="video/video_2025-04-06_23-25-54.webm" type="video/webm">
-                        </video>
+                <article class="article card">
+                    <div class="article-header">
+                        <h3>Публичное выступление</h3>
+                        <div class="article-meta">
+                            <span class="date"><i class="far fa-calendar"></i> 6 апреля 2025</span>
+                            <span class="author"><i class="far fa-user"></i> Дябденко Богдан</span>
+                        </div>
                     </div>
-                    <div class="image-container">
-                        <img src="img/photo_2025-04-07_23-40-13.jpg">
+                    <div class="article-content">
+                        <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями под воздействием кваса поздравили всех учеников с праздником.</p>
+                        <p>Шесть бутылок кваса пронесли в школу Дябденко Богдан и его друзья; до выступления они выпили одну из них. По словам самого Богдана, они просто не устояли перед квасом и выпили одну из бутылок.</p>
+                    </div>
+                    <div class="article-media">
+                        <div class="video-container small">
+                            <video controls poster="img/poster/videoframe_26.jpg" preload="metadata">
+                                <source src="video/video_2025-04-06_23-25-54.webm" type="video/webm">
+                                <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                                Ваш браузер не поддерживает видео тег.
+                            </video>
+                        </div>
+                        <div class="image-container">
+                            <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото с выступления">
+                        </div>
                     </div>
                 </article>
             </section>
             
-            <!-- Статьи -->
+            <!-- Articles Section -->
             <section id="articles" class="content-section hidden">
-                <h2><span>Статьи</span></h2>
-                <article class="article">
-                    <h3>Весна</h3>
-                    <div class="article-meta">Опубликовано: 18 апреля 2025 | Автор: Дябденко Богдан</div>
-                    <p>Итак, господа, наступила так называемая весна. Вокруг птицы занимаются своими делами, деревья оживают — красота, короче. Давайте запомним эту весну как последнюю весну нашей по-настоящему свободной, яркой и беззаботной жизни.</p>    
-                    <p>Нам осталось не так много — ещё чуть-чуть, и прощай, школа. Это были замечательные годы, которые лично мне дали очень многое. Надеюсь, каждый из нас сохранил свою честь, выработал характер, который поможет в будущем, сделал важный выбор, испытал все эмоции и выжал из этих десяти лет по максимуму.</p>
-                    <p>Теперь нас ждёт непростое время, когда как никогда нужны крепкий дух и сила воли. Надеюсь, мы все к этому готовы.</p>
-                    <p>Я благодарен всем, кого встретил на своём пути (пусть даже некоторые были, скажем так, не самыми приятными личностями — зато на их примере было легче учиться, как не надо поступать).</p>
-                    <p>Пусть это будет лучшая весна в вашей жизни — и не вздумайте её упустить.</p>
+                <div class="section-header">
+                    <h2>Статьи</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <article class="article card">
+                    <div class="article-header">
+                        <h3>Весна</h3>
+                        <div class="article-meta">
+                            <span class="date"><i class="far fa-calendar"></i> 18 апреля 2025</span>
+                            <span class="author"><i class="far fa-user"></i> Дябденко Богдан</span>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        <p>Итак, господа, наступила так называемая весна. Вокруг птицы занимаются своими делами, деревья оживают — красота, короче. Давайте запомним эту весну как последнюю весну нашей по-настоящему свободной, яркой и беззаботной жизни.</p>    
+                        <p>Нам осталось не так много — ещё чуть-чуть, и прощай, школа. Это были замечательные годы, которые лично мне дали очень многое. Надеюсь, каждый из нас сохранил свою честь, выработал характер, который поможет в будущем, сделал важный выбор, испытал все эмоции и выжал из этих десяти лет по максимуму.</p>
+                        <p>Теперь нас ждёт непростое время, когда как никогда нужны крепкий дух и сила воли. Надеюсь, мы все к этому готовы.</p>
+                        <p>Я благодарен всем, кого встретил на своём пути (пусть даже некоторые были, скажем так, не самыми приятными личностями — зато на их примере было легче учиться, как не надо поступать).</p>
+                        <p>Пусть это будет лучшая весна в вашей жизни — и не вздумайте её упустить.</p>
+                    </div>
                 </article>
             </section>
             
-            <!-- Галерея -->
+            <!-- Gallery Section -->
             <section id="gallery" class="content-section hidden">
-                <h2><span>Фотогалерея</span></h2>
+                <div class="section-header">
+                    <h2>Фотогалерея</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
                 <div class="gallery-grid">
                     <div class="gallery-item">
-                        <img src="img/pest.jpg">
+                        <img src="img/pest.jpg" alt="Фото 1">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/pest2.jpg">
+                        <img src="img/pest2.jpg" alt="Фото 2">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/pest3.jpg">
+                        <img src="img/pest3.jpg" alt="Фото 3">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/pest4.jpg">
+                        <img src="img/pest4.jpg" alt="Фото 4">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/skate3.jpg">
+                        <img src="img/skate3.jpg" alt="Скейт 1">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/skate2.jpg">
+                        <img src="img/skate2.jpg" alt="Скейт 2">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/skate.jpg">
+                        <img src="img/skate.jpg" alt="Скейт 3">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/podnos.jpg">
+                        <img src="img/podnos.jpg" alt="Подносы">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/photo_2025-04-07_23-40-13.jpg">
+                        <img src="img/photo_2025-04-07_23-40-13.jpg" alt="Фото 5">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/photo_2025-04-08_21-45-35.jpg">
+                        <img src="img/photo_2025-04-08_21-45-35.jpg" alt="Фото 6">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/photo_2025-04-09_19-34-08.jpg">
+                        <img src="img/photo_2025-04-09_19-34-08.jpg" alt="Фото 7">
                     </div>
                     <div class="gallery-item">
-                        <img src="img/photo_2025-04-09_19-34-14.jpg">
+                        <img src="img/photo_2025-04-09_19-34-14.jpg" alt="Фото 8">
                     </div>
                 </div>
             </section>
             
-            <!-- Видео -->
+            <!-- Videos Section -->
             <section id="videos" class="content-section hidden">
-                <h2><span>Видеорепортажи</span></h2>
+                <div class="section-header">
+                    <h2>Видеорепортажи</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
                 <div class="video-list">
-                    <div class="video-item">
+                    <div class="video-item card">
                         <h3>Публичное выступление</h3>
                         <div class="video-container small">
-                            <video controls poster="img/poster/videoframe_26.jpg">
+                            <video controls poster="img/poster/videoframe_26.jpg" preload="metadata">
                                 <source src="video/video_2025-04-06_23-25-54.webm" type="video/webm">
+                                <source src="video/video_2025-04-06_23-25-54.mp4" type="video/mp4">
+                                Ваш браузер не поддерживает видео тег.
                             </video>
                         </div>
                         <p>Публичное выступление в честь начала школьных каникул.</p>
@@ -163,113 +252,68 @@
                 </div>
             </section>
             
-            <!-- Добавить материал -->
+            <!-- Add Material Section -->
             <section id="add-material" class="content-section hidden">
-                <h2><span>Добавить материал</span></h2>
-                <div class="form-container">
-                    <p>Вы можете предложить свой материал для публикации в нашей газете. Заполните форму в нашей Telegram группе: <a href="telegram-link">https://t.me/+rAam8JzTMBRkNDEy</a></p>
+                <div class="section-header">
+                    <h2>Добавить материал</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <div class="form-container card">
+                    <p style="margin: 1rem 0.5rem;">Вы можете предложить свой материал для публикации в нашей газете. Заполните форму в нашей Telegram группе:</p>
+                    <div class="telegram-link">
+                        <i class="fab fa-telegram"></i>
+                        <a href="https://t.me/+rAam8JzTMBRkNDEy">https://t.me/+rAam8JzTMBRkNDEy</a>
+                    </div>
                 </div>
             </section>
         </main>
         
         <aside class="sidebar">
-            <section class="sidebar-section">
-                <h2><span>Последние новости</span></h2>
-                <div class="article">
-                    <h3>Пребывание в лагере</h3>
-                    <div class="article-meta">20 апреля 2025</div>
-                    <p>С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена». Программа смены включала образовательные лекции, творч...</p>
-                    <a href="#news" class="read-more">Читать далее →</a>
+            <!-- About Section -->
+            <section class="sidebar-section card">
+                <div class="sidebar-header">
+                    <h3>О газете</h3>
                 </div>
-                
-                <div class="article">
-                    <h3>Публичное выступление</h3>
-                    <div class="article-meta">6 апреля 2025</div>
-                    <p>В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул. Богдан со своими друзьями...</p>
-                    <a href="#news" class="read-more">Читать далее →</a>
+                <p>Газета «Душа компании» публикуется с 2025 года. Мы освещаем самые важные события нашей дружной компании.</p>
+            </section>
+            
+            <!-- Latest News -->
+            <section class="sidebar-section card">
+                <div class="sidebar-header">
+                    <h3>Последние новости</h3>
+                </div>
+                <div class="sidebar-news">
+                    <div class="news-item">
+                        <h4>Пребывание в лагере</h4>
+                        <div class="news-meta">20 апреля 2025</div>
+                        <a href="#news" class="read-more">Читать далее <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="news-item">
+                        <h4>Публичное выступление</h4>
+                        <div class="news-meta">6 апреля 2025</div>
+                        <a href="#news" class="read-more">Читать далее <i class="fas fa-arrow-right"></i></a>
+                    </div>
                 </div>
             </section>
             
-            <section class="sidebar-section">
-                <h2><span>Фотогалерея</span></h2>
+            <!-- Gallery Preview -->
+            <section class="sidebar-section card">
+                <div class="sidebar-header">
+                    <h3>Фотогалерея</h3>
+                </div>
                 <div class="sidebar-gallery">
-                    <div class="gallery-item">
-                        <img src="img/pest4.jpg">
+                    <div class="gallery-preview">
+                        <img src="img/pest4.jpg" alt="Галерея изображение 1">
+                        <img src="img/pest.jpg" alt="Галерея изображение 2">
                     </div>
-                    <div class="gallery-item">
-                        <img src="img/pest.jpg">
-                    </div>
+                    <a href="#gallery" class="sidebar-link">Все фото <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <a href="#gallery" class="sidebar-link">Все фото →</a>
             </section>
-            
-            <section class="sidebar-section">
-                <h2><span>Видеоархив</span></h2>
-                <div class="video-container">
-                    <video controls poster="img/poster/videoframe_26.jpg">
-                        <source src="video/video_2025-04-06_23-25-54.webm" type="video/webm">
-                    </video>
-                </div>
-                <a href="#videos" class="sidebar-link">Все видео →</a>
-            </section>
-
-            <!-- <section class="sidebar-section">
-                <h2><span>Календарь</span></h2>
-                <div class="calendar">
-                    <div class="calendar-header">
-                        <span>Май 2023</span>
-                    </div>
-                    <div class="calendar-grid">
-                        <div class="day-name">Пн</div>
-                        <div class="day-name">Вт</div>
-                        <div class="day-name">Ср</div>
-                        <div class="day-name">Чт</div>
-                        <div class="day-name">Пт</div>
-                        <div class="day-name">Сб</div>
-                        <div class="day-name">Вс</div>
-                        
-                        <div class="day">1</div>
-                        <div class="day">2</div>
-                        <div class="day">3</div>
-                        <div class="day">4</div>
-                        <div class="day">5</div>
-                        <div class="day">6</div>
-                        <div class="day">7</div>
-                        <div class="day">8</div>
-                        <div class="day">9</div>
-                        <div class="day">10</div>
-                        <div class="day">11</div>
-                        <div class="day">12</div>
-                        <div class="day">13</div>
-                        <div class="day">14</div>
-                        <div class="day">15</div>
-                        <div class="day">16</div>
-                        <div class="day">17</div>
-                        <div class="day">18</div>
-                        <div class="day">19</div>
-                        <div class="day event">20</div>
-                        <div class="day">21</div>
-                        <div class="day">22</div>
-                        <div class="day event">23</div>
-                        <div class="day">24</div>
-                        <div class="day">25</div>
-                        <div class="day">26</div>
-                        <div class="day">27</div>
-                        <div class="day event">28</div>
-                        <div class="day">29</div>
-                        <div class="day">30</div>
-                        <div class="day">31</div>
-                    </div>
-                </div>
-                <div class="event-info">
-                    <p><strong>20 мая</strong> - Собрание родителей</p>
-                    <p><strong>23 мая</strong> - Последний звонок</p>
-                    <p><strong>28 мая</strong> - Выпускной вечер</p>
-                </div>
-            </section> -->
         </aside>
     </div>
     
+    <!-- Footer -->
     <footer>
         <div class="footer-content">
             <div class="footer-section">
@@ -286,11 +330,22 @@
                 <p>Ответственный за выпуски: <b>Дябденко Б.К.</b></p>
                 <p>Технический редактор: <b>Немятов А.А.</b></p>
             </div>
+            <div class="footer-section">
+                <h3>Мы в соцсетях</h3>
+                <div class="social-links">
+                    <a href="https://t.me/+rAam8JzTMBRkNDEy" class="social-btn"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
         </div>
         <div class="footer-bottom">
             <p>© 2025 Газета «Душа компании». Все права защищены.</p>
         </div>
     </footer>
+    
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
     
     <script src="script.js"></script>
 </body>
