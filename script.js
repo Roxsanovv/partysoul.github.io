@@ -2,6 +2,55 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update current date
     updateCurrentDate();
     
+    // Mobile menu functionality
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const body = document.body;
+    
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            body.classList.toggle('mobile-menu-open');
+            
+            // Toggle navigation visibility
+            const nav = document.querySelector('nav');
+            if (body.classList.contains('mobile-menu-open')) {
+                nav.style.display = 'block';
+                setTimeout(() => {
+                    nav.style.opacity = '1';
+                    nav.style.transform = 'translateY(0)';
+                }, 10);
+            } else {
+                nav.style.opacity = '0';
+                nav.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    nav.style.display = 'none';
+                }, 300);
+            }
+        });
+    }
+    
+    // Mobile navigation items
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (this.getAttribute('href').startsWith('#')) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                showSection(targetId);
+                
+                // Set active state
+                document.querySelectorAll('.mobile-nav-item').forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Close mobile menu if open
+                if (body.classList.contains('mobile-menu-open')) {
+                    mobileMenuToggle.click();
+                }
+            }
+        });
+    });
+    
     // Create mobile menu button
     const mobileMenuButton = document.createElement('button');
     mobileMenuButton.className = 'mobile-menu-button';
@@ -35,9 +84,18 @@ document.addEventListener('DOMContentLoaded', function() {
             setActiveNavLink(this);
             
             // Close mobile menu if open
-            if (mobileMenuButton.classList.contains('active')) {
-                mobileMenuButton.click();
+            if (body.classList.contains('mobile-menu-open')) {
+                mobileMenuToggle.click();
             }
+            
+            // Update mobile nav
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                if (item.getAttribute('href') === this.getAttribute('href')) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
         });
     });
     
@@ -123,6 +181,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Video initialization
     initVideos();
+    
+    // Touch events for mobile
+    initTouchEvents();
     
     // Initialize
     showSection('home');
@@ -282,6 +343,21 @@ function createImageModal(src, alt) {
             document.removeEventListener('keydown', closeOnEscape);
         }
     });
+    
+    // Swipe to close on mobile
+    let touchStartY = 0;
+    modal.addEventListener('touchstart', function(e) {
+        touchStartY = e.touches[0].clientY;
+    });
+    
+    modal.addEventListener('touchmove', function(e) {
+        const touchY = e.touches[0].clientY;
+        const diffY = touchY - touchStartY;
+        
+        if (diffY > 50) {
+            closeModal();
+        }
+    });
 }
 
 // Check mobile menu
@@ -296,6 +372,33 @@ function checkMobileMenu() {
         mobileMenuButton.style.display = 'none';
         navList.classList.remove('show');
     }
+}
+
+// Initialize touch events for mobile
+function initTouchEvents() {
+    // Add touch-friendly hover effects
+    document.querySelectorAll('.card, .gallery-item, .nav-link').forEach(element => {
+        element.addEventListener('touchstart', function() {
+            this.classList.add('touch-active');
+        }, {passive: true});
+        
+        element.addEventListener('touchend', function() {
+            this.classList.remove('touch-active');
+        }, {passive: true});
+    });
+    
+    // Prevent zoom on double-tap
+    let lastTap = 0;
+    document.addEventListener('touchend', function(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        
+        if (tapLength < 300 && tapLength > 0) {
+            e.preventDefault();
+        }
+        
+        lastTap = currentTime;
+    }, {passive: false});
 }
 
 // Add modal styles dynamically
@@ -351,6 +454,26 @@ modalStyles.textContent = `
         transform: translate(-50%, -50%);
         color: white;
         z-index: 1;
+    }
+    
+    .touch-active {
+        transform: scale(0.98) !important;
+        opacity: 0.9 !important;
+    }
+    
+    @media (max-width: 768px) {
+        .modal button {
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .modal img {
+            max-width: 95%;
+            max-height: 80%;
+        }
     }
 `;
 document.head.appendChild(modalStyles);
