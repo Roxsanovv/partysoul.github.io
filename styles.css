@@ -31,16 +31,6 @@ body.dark-theme {
     overflow-x: hidden;
 }
 
-/* Mobile Header - УБИРАЕМ его полностью */
-.mobile-header {
-    display: none !important;
-}
-
-/* Mobile Navigation Bottom Bar */
-.mobile-nav-bottom {
-    display: none;
-}
-
 /* Header Modern - Тёмная тема */
 .header-modern {
     background: var(--dark-surface);
@@ -80,6 +70,7 @@ body.dark-theme {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .header-social a:hover {
@@ -180,6 +171,7 @@ nav ul li a {
     font-weight: 500;
     position: relative;
     transition: var(--transition);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 nav ul li a i {
@@ -190,11 +182,13 @@ nav ul li a i {
 nav ul li a:hover {
     color: var(--primary);
     background: rgba(255, 107, 107, 0.1);
+    text-decoration: none; /* Убираем подчёркивание при наведении */
 }
 
 nav ul li a.active {
     color: var(--primary);
     background: rgba(255, 107, 107, 0.15);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 nav ul li a.active::after {
@@ -217,6 +211,7 @@ nav ul li a.active::after {
     margin-top: 0.25rem;
     padding: 0.75rem 1.5rem;
     box-shadow: var(--glow);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .cta-button:hover {
@@ -224,6 +219,7 @@ nav ul li a.active::after {
     color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(255, 107, 107, 0.3);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 /* Main Content */
@@ -449,10 +445,12 @@ nav ul li a.active::after {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .read-more:hover {
     color: var(--secondary);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .gallery-preview {
@@ -482,10 +480,12 @@ nav ul li a.active::after {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .sidebar-link:hover {
     color: var(--secondary);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .telegram-link {
@@ -507,6 +507,11 @@ nav ul li a.active::after {
 .telegram-link a {
     color: #0088cc;
     font-weight: 500;
+    text-decoration: none; /* Убираем подчёркивание */
+}
+
+.telegram-link a:hover {
+    text-decoration: underline; /* Добавляем подчёркивание только при наведении */
 }
 
 /* Footer */
@@ -565,6 +570,7 @@ footer {
     border-radius: 50%;
     color: var(--text-secondary);
     transition: var(--transition);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .social-links a:hover {
@@ -661,6 +667,7 @@ footer {
     font-weight: 500;
     font-family: inherit;
     font-size: 0.9rem;
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .like-btn:hover {
@@ -668,6 +675,7 @@ footer {
     color: white;
     transform: translateY(-2px);
     box-shadow: var(--glow);
+    text-decoration: none; /* Убираем подчёркивание */
 }
 
 .like-btn.liked {
@@ -729,21 +737,7 @@ footer {
 }
 
 @media (max-width: 768px) {
-    /* УБИРАЕМ скрытие основного header */
-    .header-modern {
-        display: block !important;
-    }
-    
-    /* Убираем мобильные элементы */
-    .mobile-header {
-        display: none !important;
-    }
-    
-    .mobile-nav-bottom {
-        display: none !important;
-    }
-    
-    /* Делаем навигацию адаптивной */
+    /* Адаптивная навигация */
     nav ul {
         flex-wrap: wrap;
         justify-content: center;
@@ -852,6 +846,15 @@ footer {
     }
 }
 
+/* Global link styles - Убираем подчёркивание у всех ссылок */
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -871,35 +874,4 @@ footer {
 ::-moz-selection {
     background-color: var(--primary);
     color: white;
-}
-
-/* Utility classes */
-.text-center {
-    text-align: center;
-}
-
-.mb-2 {
-    margin-bottom: 2rem;
-}
-
-.mt-2 {
-    margin-top: 2rem;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--dark-surface);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
 }
