@@ -2,55 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update current date
     updateCurrentDate();
     
-    // Mobile menu functionality
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const body = document.body;
-    
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            this.classList.toggle('active');
-            body.classList.toggle('mobile-menu-open');
-            
-            // Toggle navigation visibility
-            const nav = document.querySelector('nav');
-            if (body.classList.contains('mobile-menu-open')) {
-                nav.style.display = 'block';
-                setTimeout(() => {
-                    nav.style.opacity = '1';
-                    nav.style.transform = 'translateY(0)';
-                }, 10);
-            } else {
-                nav.style.opacity = '0';
-                nav.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    nav.style.display = 'none';
-                }, 300);
-            }
-        });
-    }
-    
-    // Mobile navigation items
-    document.querySelectorAll('.mobile-nav-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            if (this.getAttribute('href').startsWith('#')) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href').substring(1);
-                showSection(targetId);
-                
-                // Set active state
-                document.querySelectorAll('.mobile-nav-item').forEach(navItem => {
-                    navItem.classList.remove('active');
-                });
-                this.classList.add('active');
-                
-                // Close mobile menu if open
-                if (body.classList.contains('mobile-menu-open')) {
-                    mobileMenuToggle.click();
-                }
-            }
-        });
-    });
-    
     // Create mobile menu button
     const mobileMenuButton = document.createElement('button');
     mobileMenuButton.className = 'mobile-menu-button';
@@ -84,18 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
             setActiveNavLink(this);
             
             // Close mobile menu if open
-            if (body.classList.contains('mobile-menu-open')) {
-                mobileMenuToggle.click();
+            if (mobileMenuButton.classList.contains('active')) {
+                mobileMenuButton.click();
             }
-            
-            // Update mobile nav
-            document.querySelectorAll('.mobile-nav-item').forEach(item => {
-                if (item.getAttribute('href') === this.getAttribute('href')) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
         });
     });
     
@@ -131,46 +73,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Form handling
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Simple form validation
-            let isValid = true;
-            const inputs = this.querySelectorAll('input[required]');
-            
-            inputs.forEach(input => {
-                if (!input.value.trim()) {
-                    isValid = false;
-                    input.style.borderColor = 'var(--primary)';
-                    
-                    // Remove error style after delay
-                    setTimeout(() => {
-                        input.style.borderColor = '';
-                    }, 2000);
-                } else {
-                    input.style.borderColor = '';
-                }
-            });
-            
-            if (isValid) {
-                // Show success message
-                const submitButton = this.querySelector('button[type="submit"]');
-                const originalText = submitButton.textContent;
-                
-                submitButton.innerHTML = '<i class="fas fa-check"></i>';
-                submitButton.style.background = '#28a745';
-                
-                setTimeout(() => {
-                    submitButton.textContent = originalText;
-                    submitButton.style.background = '';
-                    this.reset();
-                }, 1500);
-            }
-        });
-    });
+    // Initialize likes system
+    initLikesSystem();
     
     // Image modal functionality
     document.querySelectorAll('.image-container img, .gallery-item img').forEach(img => {
@@ -182,9 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Video initialization
     initVideos();
     
-    // Touch events for mobile
-    initTouchEvents();
-    
     // Initialize
     showSection('home');
     
@@ -192,6 +93,190 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', checkMobileMenu);
     checkMobileMenu();
 });
+
+// ==================== СИСТЕМА ЛАЙКОВ ====================
+
+// Конфигурация - используем бесплатный JSONbin для хранения данных
+const LIKES_CONFIG = {
+    binId: '68d1908fae596e708ff78727', // Замените на свой ID после создания
+    apiKey: '$2a$10$TRVnXVrm1wK4Aqfkr7DY8e0T3mJSQGnbt6w4fg3PVnS4mICoAae2m', // Ключ доступа
+    baseUrl: 'https://api.jsonbin.io/v3/b'
+};
+
+// Функция инициализации системы лайков
+async function initLikesSystem() {
+    try {
+        // Загружаем данные о лайках
+        const likesData = await loadLikesData();
+        
+        // Инициализируем кнопки лайков
+        initLikeButtons(likesData);
+        
+        console.log('Система лайков загружена');
+    } catch (error) {
+        console.error('Ошибка загрузки системы лайков:', error);
+        // Используем локальное хранилище как запасной вариант
+        initLikeButtonsWithLocalStorage();
+    }
+}
+
+// Загрузка данных о лайках с сервера
+async function loadLikesData() {
+    const response = await fetch(`${LIKES_CONFIG.baseUrl}/${LIKES_CONFIG.binId}/latest`, {
+        headers: {
+            'X-Master-Key': LIKES_CONFIG.apiKey,
+            'Content-Type': 'application/json'
+        }
+    });
+    
+    if (!response.ok) {
+        throw new Error('Ошибка загрузки данных');
+    }
+    
+    const data = await response.json();
+    return data.record.likes || {};
+}
+
+// Сохранение данных о лайках на сервер
+async function saveLikesData(likesData) {
+    const response = await fetch(`${LIKES_CONFIG.baseUrl}/${LIKES_CONFIG.binId}`, {
+        method: 'PUT',
+        headers: {
+            'X-Master-Key': LIKES_CONFIG.apiKey,
+            'Content-Type': 'application/json',
+            'X-Bin-Versioning': 'false'
+        },
+        body: JSON.stringify({ likes: likesData })
+    });
+    
+    if (!response.ok) {
+        throw new Error('Ошибка сохранения данных');
+    }
+    
+    return await response.json();
+}
+
+// Инициализация кнопок лайков
+function initLikeButtons(likesData) {
+    document.querySelectorAll('.like-btn').forEach(button => {
+        const articleId = button.getAttribute('data-article');
+        const countElement = button.querySelector('.like-count');
+        
+        // Устанавливаем начальное значение
+        const likesCount = likesData[articleId] || 0;
+        countElement.textContent = likesCount;
+        
+        // Проверяем, лайкал ли текущий пользователь эту статью
+        const userLikes = getUserLikes();
+        if (userLikes.includes(articleId)) {
+            button.classList.add('liked');
+        }
+        
+        // Добавляем обработчик клика
+        button.addEventListener('click', async () => {
+            await handleLikeClick(articleId, button, countElement, likesData);
+        });
+    });
+}
+
+// Запасной вариант с локальным хранилищем
+function initLikeButtonsWithLocalStorage() {
+    let likesData = JSON.parse(localStorage.getItem('likesData') || '{}');
+    
+    document.querySelectorAll('.like-btn').forEach(button => {
+        const articleId = button.getAttribute('data-article');
+        const countElement = button.querySelector('.like-count');
+        
+        // Устанавливаем начальное значение
+        const likesCount = likesData[articleId] || 0;
+        countElement.textContent = likesCount;
+        
+        // Проверяем, лайкал ли текущий пользователь
+        const userLikes = getUserLikes();
+        if (userLikes.includes(articleId)) {
+            button.classList.add('liked');
+        }
+        
+        // Обработчик клика
+        button.addEventListener('click', () => {
+            handleLikeClickLocal(articleId, button, countElement, likesData);
+        });
+    });
+}
+
+// Обработка клика по лайку (серверная версия)
+async function handleLikeClick(articleId, button, countElement, likesData) {
+    const userLikes = getUserLikes();
+    let currentCount = parseInt(countElement.textContent);
+    let isLiked = button.classList.contains('liked');
+    
+    if (isLiked) {
+        // Убираем лайк
+        currentCount--;
+        button.classList.remove('liked');
+        removeUserLike(articleId);
+        likesData[articleId] = (likesData[articleId] || 1) - 1;
+    } else {
+        // Добавляем лайк
+        currentCount++;
+        button.classList.add('liked');
+        addUserLike(articleId);
+        likesData[articleId] = (likesData[articleId] || 0) + 1;
+    }
+    
+    countElement.textContent = currentCount;
+    
+    // Сохраняем на сервер
+    try {
+        await saveLikesData(likesData);
+    } catch (error) {
+        console.error('Ошибка сохранения лайка:', error);
+        // Сохраняем в локальное хранилище как запасной вариант
+        localStorage.setItem('likesData', JSON.stringify(likesData));
+    }
+}
+
+// Обработка клика по лайку (локальная версия)
+function handleLikeClickLocal(articleId, button, countElement, likesData) {
+    const userLikes = getUserLikes();
+    let currentCount = parseInt(countElement.textContent);
+    let isLiked = button.classList.contains('liked');
+    
+    if (isLiked) {
+        currentCount--;
+        button.classList.remove('liked');
+        removeUserLike(articleId);
+    } else {
+        currentCount++;
+        button.classList.add('liked');
+        addUserLike(articleId);
+    }
+    
+    countElement.textContent = currentCount;
+    likesData[articleId] = currentCount;
+    localStorage.setItem('likesData', JSON.stringify(likesData));
+}
+
+// Работа с лайками пользователя в localStorage
+function getUserLikes() {
+    return JSON.parse(localStorage.getItem('userLikes') || '[]');
+}
+
+function addUserLike(articleId) {
+    const userLikes = getUserLikes();
+    if (!userLikes.includes(articleId)) {
+        userLikes.push(articleId);
+        localStorage.setItem('userLikes', JSON.stringify(userLikes));
+    }
+}
+
+function removeUserLike(articleId) {
+    let userLikes = getUserLikes();
+    userLikes = userLikes.filter(id => id !== articleId);
+    localStorage.setItem('userLikes', JSON.stringify(userLikes));
+}
+
+// ==================== ОСТАЛЬНЫЕ ФУНКЦИИ ====================
 
 // Update current date
 function updateCurrentDate() {
@@ -237,15 +322,6 @@ function setActiveNavLink(activeLink) {
 // Initialize videos
 function initVideos() {
     document.querySelectorAll('video').forEach(video => {
-        // Add loading indicator
-        video.addEventListener('loadstart', function() {
-            this.parentElement.classList.add('loading');
-        });
-        
-        video.addEventListener('canplay', function() {
-            this.parentElement.classList.remove('loading');
-        });
-        
         video.addEventListener('play', function() {
             // Pause other videos when one is playing
             document.querySelectorAll('video').forEach(v => {
@@ -343,21 +419,6 @@ function createImageModal(src, alt) {
             document.removeEventListener('keydown', closeOnEscape);
         }
     });
-    
-    // Swipe to close on mobile
-    let touchStartY = 0;
-    modal.addEventListener('touchstart', function(e) {
-        touchStartY = e.touches[0].clientY;
-    });
-    
-    modal.addEventListener('touchmove', function(e) {
-        const touchY = e.touches[0].clientY;
-        const diffY = touchY - touchStartY;
-        
-        if (diffY > 50) {
-            closeModal();
-        }
-    });
 }
 
 // Check mobile menu
@@ -373,107 +434,3 @@ function checkMobileMenu() {
         navList.classList.remove('show');
     }
 }
-
-// Initialize touch events for mobile
-function initTouchEvents() {
-    // Add touch-friendly hover effects
-    document.querySelectorAll('.card, .gallery-item, .nav-link').forEach(element => {
-        element.addEventListener('touchstart', function() {
-            this.classList.add('touch-active');
-        }, {passive: true});
-        
-        element.addEventListener('touchend', function() {
-            this.classList.remove('touch-active');
-        }, {passive: true});
-    });
-    
-    // Prevent zoom on double-tap
-    let lastTap = 0;
-    document.addEventListener('touchend', function(e) {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        
-        if (tapLength < 300 && tapLength > 0) {
-            e.preventDefault();
-        }
-        
-        lastTap = currentTime;
-    }, {passive: false});
-}
-
-// Add modal styles dynamically
-const modalStyles = document.createElement('style');
-modalStyles.textContent = `
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.95);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        cursor: pointer;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .modal img {
-        max-width: 90%;
-        max-height: 90%;
-        object-fit: contain;
-        border-radius: 8px;
-        transform: scale(0.9);
-        transition: transform 0.3s ease;
-    }
-    
-    .modal button {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 40px;
-        cursor: pointer;
-        z-index: 1001;
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .video-container.loading::before {
-        content: 'Загрузка...';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        z-index: 1;
-    }
-    
-    .touch-active {
-        transform: scale(0.98) !important;
-        opacity: 0.9 !important;
-    }
-    
-    @media (max-width: 768px) {
-        .modal button {
-            top: 10px;
-            right: 10px;
-            font-size: 30px;
-            width: 40px;
-            height: 40px;
-        }
-        
-        .modal img {
-            max-width: 95%;
-            max-height: 80%;
-        }
-    }
-`;
-document.head.appendChild(modalStyles);
