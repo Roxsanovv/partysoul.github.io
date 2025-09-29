@@ -1,4 +1,4 @@
-// Конфигурация Firebase
+// Конфигурация Firebase - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ
 const firebaseConfig = {
     apiKey: "AIzaSyC5FKXH7a06_jXk5rkj_vsplGkga_CQ1aQ",
     authDomain: "partysoul-64201.firebaseapp.com",
@@ -734,5 +734,3 @@ function checkMobileMenu() {
 }
 
 console.log('Firebase script with global tracking loaded successfully');
-
-
