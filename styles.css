@@ -70,7 +70,7 @@ body.dark-theme {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .header-social a:hover {
@@ -171,7 +171,7 @@ nav ul li a {
     font-weight: 500;
     position: relative;
     transition: var(--transition);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 nav ul li a i {
@@ -182,13 +182,13 @@ nav ul li a i {
 nav ul li a:hover {
     color: var(--primary);
     background: rgba(255, 107, 107, 0.1);
-    text-decoration: none; /* Убираем подчёркивание при наведении */
+    text-decoration: none;
 }
 
 nav ul li a.active {
     color: var(--primary);
     background: rgba(255, 107, 107, 0.15);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 nav ul li a.active::after {
@@ -211,7 +211,7 @@ nav ul li a.active::after {
     margin-top: 0.25rem;
     padding: 0.75rem 1.5rem;
     box-shadow: var(--glow);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .cta-button:hover {
@@ -219,7 +219,7 @@ nav ul li a.active::after {
     color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(255, 107, 107, 0.3);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 /* Main Content */
@@ -294,7 +294,18 @@ nav ul li a.active::after {
 
 .article-meta i {
     margin-right: 0.5rem;
+}
+
+.article-meta .date i {
     color: var(--primary);
+}
+
+.article-meta .author i {
+    color: var(--secondary);
+}
+
+.article-meta .views i {
+    color: var(--accent);
 }
 
 .article-content {
@@ -304,6 +315,15 @@ nav ul li a.active::after {
 .article-content p {
     color: var(--text-secondary);
     line-height: 1.8;
+}
+
+/* Article Actions */
+.article-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--dark-border);
 }
 
 /* Media */
@@ -445,12 +465,12 @@ nav ul li a.active::after {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .read-more:hover {
     color: var(--secondary);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .gallery-preview {
@@ -480,12 +500,12 @@ nav ul li a.active::after {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .sidebar-link:hover {
     color: var(--secondary);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .telegram-link {
@@ -507,11 +527,11 @@ nav ul li a.active::after {
 .telegram-link a {
     color: #0088cc;
     font-weight: 500;
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .telegram-link a:hover {
-    text-decoration: underline; /* Добавляем подчёркивание только при наведении */
+    text-decoration: underline;
 }
 
 /* Footer */
@@ -570,7 +590,7 @@ footer {
     border-radius: 50%;
     color: var(--text-secondary);
     transition: var(--transition);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .social-links a:hover {
@@ -643,14 +663,12 @@ footer {
     box-shadow: var(--glow);
 }
 
-/* ==================== СТИЛИ ДЛЯ СИСТЕМЫ ЛАЙКОВ ==================== */
+/* ==================== СТИЛИ ДЛЯ СИСТЕМЫ ЛАЙКОВ И ПРОСМОТРОВ ==================== */
 
 .article-likes {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--dark-border);
-    display: flex;
-    justify-content: flex-end;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 .like-btn {
@@ -667,7 +685,7 @@ footer {
     font-weight: 500;
     font-family: inherit;
     font-size: 0.9rem;
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .like-btn:hover {
@@ -675,7 +693,7 @@ footer {
     color: white;
     transform: translateY(-2px);
     box-shadow: var(--glow);
-    text-decoration: none; /* Убираем подчёркивание */
+    text-decoration: none;
 }
 
 .like-btn.liked {
@@ -721,6 +739,29 @@ footer {
     display: none;
 }
 
+/* Mobile Menu Button */
+.mobile-menu-button {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 21px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 1rem;
+}
+
+.mobile-menu-button span {
+    display: block;
+    height: 3px;
+    width: 100%;
+    background-color: var(--text-secondary);
+    border-radius: 3px;
+    transition: var(--transition);
+}
+
 /* Responsive Design */
 @media (max-width: 992px) {
     .container {
@@ -738,23 +779,51 @@ footer {
 
 @media (max-width: 768px) {
     /* Адаптивная навигация */
+    .nav-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .mobile-menu-button {
+        display: flex;
+    }
+    
     nav ul {
-        flex-wrap: wrap;
-        justify-content: center;
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--dark-surface);
+        flex-direction: column;
+        box-shadow: var(--shadow);
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+        z-index: 100;
+    }
+    
+    nav ul.show {
+        display: flex;
     }
     
     nav ul li {
-        margin: 0.25rem;
+        margin: 0;
     }
     
     nav ul li a {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--dark-border);
+        justify-content: flex-start;
+    }
+    
+    nav ul li:last-child a {
+        border-bottom: none;
     }
     
     .cta-button {
         margin-left: 0;
-        margin-top: 0.5rem;
+        margin-top: 0;
+        border-radius: 0;
     }
     
     .logo-modern .logo {
@@ -796,7 +865,7 @@ footer {
         justify-content: center;
     }
     
-    .article-likes {
+    .article-actions {
         justify-content: center;
     }
     
@@ -823,15 +892,6 @@ footer {
         padding: 1.25rem;
     }
     
-    nav ul li a {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-    }
-    
-    nav ul li a i {
-        margin-right: 0.25rem;
-    }
-    
     .gallery-grid {
         grid-template-columns: 1fr;
     }
@@ -846,7 +906,7 @@ footer {
     }
 }
 
-/* Global link styles - Убираем подчёркивание у всех ссылок */
+/* Global link styles */
 a {
     text-decoration: none;
 }
@@ -874,4 +934,4 @@ a:hover {
 ::-moz-selection {
     background-color: var(--primary);
     color: white;
-}
+        }
