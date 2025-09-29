@@ -2,7 +2,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyC5FKXH7a06_jXk5rkj_vsplGkga_CQ1aQ",
     authDomain: "partysoul-64201.firebaseapp.com",
-    databaseURL: "https://partysoul-64201-default-rtdb.asia-southeast1.firebasedatabase.app,
+    databaseURL: "https://partysoul-64201-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "partysoul-64201",
     storageBucket: "partysoul-64201.firebasestorage.app",
     messagingSenderId: "71365640479",
@@ -734,4 +734,5 @@ function checkMobileMenu() {
 }
 
 console.log('Firebase script with global tracking loaded successfully');
+
 
