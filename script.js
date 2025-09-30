@@ -22,7 +22,69 @@ try {
 // Глобальные переменные для хранения данных
 let viewsData = {};
 let likesData = {};
-let articlesMap = new Map(); // Хранит все элементы статей по их ID
+let articlesMap = new Map();
+let currentAuthorProfile = null;
+
+// Данные авторов
+const authorsData = {
+    "Немятов Артём": {
+        role: "Главный редактор",
+        bio: "Главный редактор газеты «Душа компании». Увлекается писательством и журналистикой. Пишет глубокие философские статьи о жизни и взрослении.",
+        articles: ["article1"],
+        avatar: "fas fa-user",
+        avatarColor: "primary"
+    },
+    "Дябденко Богдан": {
+        role: "Фоторепортёр",
+        bio: "Фоторепортёр и автор статей. Специализируется на репортажах и новостях школьной жизни. Любит захватывать яркие моменты школьных событий.",
+        articles: ["article3", "article4"],
+        avatar: "fas fa-camera",
+        avatarColor: "accent"
+    },
+    "Иванова Анастасия": {
+        role: "Корреспондент",
+        bio: "Корреспондент газеты. Пишет о событиях школьной жизни и внешкольных активностях. Участвует в различных образовательных программах и лагерях.",
+        articles: ["article2"],
+        avatar: "fas fa-newspaper",
+        avatarColor: "secondary"
+    }
+};
+
+// Данные статей для связи с авторами
+const articlesData = {
+    "article1": {
+        title: "Взросление",
+        date: "21 сентября 2025",
+        section: "articles",
+        excerpt: "Мама говорила: \"Школьная дружба редко длится вечно. Появятся новые люди, а старые связи постепенно угаснут.\"",
+        author: "Немятов Артём",
+        type: "article"
+    },
+    "article2": {
+        title: "Пребывание в лагере",
+        date: "20 апреля 2025",
+        section: "news",
+        excerpt: "С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена».",
+        author: "Иванова Анастасия",
+        type: "news"
+    },
+    "article3": {
+        title: "Весна",
+        date: "18 апреля 2025",
+        section: "articles",
+        excerpt: "Итак, господа, наступила так называемая весна. Вокруг птицы занимаются своими делами, деревья оживают — красота, короче.",
+        author: "Дябденко Богдан",
+        type: "article"
+    },
+    "article4": {
+        title: "Публичное выступление",
+        date: "6 апреля 2025",
+        section: "news",
+        excerpt: "В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул.",
+        author: "Дябденко Богдан",
+        type: "news"
+    }
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, инициализация...');
@@ -181,6 +243,9 @@ async function initSystems() {
         // Инициализируем счетчики во всех статьях
         initAllViewsCounters();
         initAllLikeButtons();
+        
+        // Инициализируем систему профилей
+        initProfilesSystem();
         
         // Запускаем отслеживание просмотров
         startViewTracking();
@@ -536,6 +601,491 @@ function updateLikeButtonsForArticle(articleId, count) {
     }
 }
 
+// ==================== СИСТЕМА ПРОФИЛЕЙ АВТОРОВ ====================
+
+// Инициализация системы профилей
+function initProfilesSystem() {
+    console.log('Инициализация системы профилей...');
+    
+    // Обновляем статистику авторов
+    updateAuthorsStats();
+    
+    // Заполняем списки статей
+    populateAuthorArticles();
+    
+    // Инициализируем кнопки профилей
+    initProfileButtons();
+    
+    // Инициализируем модальные окна
+    initAuthorModals();
+    
+    // Слушаем изменения данных для обновления статистики
+    startProfilesRealtimeUpdates();
+}
+
+// Обновление статистики авторов
+function updateAuthorsStats() {
+    Object.keys(authorsData).forEach(authorName => {
+        const author = authorsData[authorName];
+        const authorArticles = author.articles;
+        
+        // Считаем общую статистику
+        let totalViews = 0;
+        let totalLikes = 0;
+        
+        authorArticles.forEach(articleId => {
+            totalViews += viewsData[articleId] || 0;
+            totalLikes += likesData[articleId] || 0;
+        });
+        
+        // Обновляем DOM
+        updateAuthorStatsDOM(authorName, authorArticles.length, totalViews, totalLikes);
+    });
+}
+
+// Обновление DOM статистики автора
+function updateAuthorStatsDOM(authorName, articlesCount, viewsCount, likesCount) {
+    const authorId = getAuthorId(authorName);
+    
+    // Обновляем карточку профиля
+    const articlesElement = document.getElementById(`${authorId}-articles`);
+    const viewsElement = document.getElementById(`${authorId}-views`);
+    const likesElement = document.getElementById(`${authorId}-likes`);
+    
+    if (articlesElement) articlesElement.textContent = articlesCount;
+    if (viewsElement) viewsElement.textContent = formatViews(viewsCount);
+    if (likesElement) likesElement.textContent = formatViews(likesCount);
+}
+
+// Заполнение списков статей авторов
+function populateAuthorArticles() {
+    Object.keys(authorsData).forEach(authorName => {
+        const author = authorsData[authorName];
+        const articlesListId = `${getAuthorId(authorName)}-articles-list`;
+        const articlesList = document.getElementById(articlesListId);
+        
+        if (articlesList) {
+            // Очищаем список
+            articlesList.innerHTML = '';
+            
+            // Добавляем статьи (максимум 3)
+            author.articles.slice(0, 3).forEach(articleId => {
+                const articleData = articlesData[articleId];
+                if (articleData) {
+                    const articleElement = createAuthorArticleElement(articleId, articleData);
+                    articlesList.appendChild(articleElement);
+                }
+            });
+            
+            // Если статей нет, показываем сообщение
+            if (author.articles.length === 0) {
+                articlesList.innerHTML = '<p class="no-articles">Пока нет материалов</p>';
+            }
+        }
+    });
+}
+
+// Создание элемента статьи для списка автора
+function createAuthorArticleElement(articleId, articleData) {
+    const article = document.createElement('div');
+    article.className = 'author-article-item';
+    article.setAttribute('data-article-id', articleId);
+    
+    const views = viewsData[articleId] || 0;
+    const likes = likesData[articleId] || 0;
+    
+    article.innerHTML = `
+        <div class="article-item-header">
+            <div>
+                <div class="article-item-title">${articleData.title}</div>
+                <div class="article-item-meta">
+                    <span>${articleData.date}</span>
+                    <span>${getSectionName(articleData.section)}</span>
+                </div>
+            </div>
+        </div>
+        <div class="article-item-stats">
+            <div class="article-stat">
+                <i class="far fa-eye"></i>
+                <span>${formatViews(views)}</span>
+            </div>
+            <div class="article-stat">
+                <i class="far fa-heart"></i>
+                <span>${formatViews(likes)}</span>
+            </div>
+        </div>
+    `;
+    
+    // Добавляем обработчик клика
+    article.addEventListener('click', function() {
+        const section = articleData.section;
+        showSection(section);
+        
+        // Прокручиваем к статье
+        setTimeout(() => {
+            const targetArticle = document.querySelector(`[data-article-id="${articleId}"]`);
+            if (targetArticle) {
+                targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Добавляем подсветку
+                targetArticle.style.boxShadow = '0 0 0 2px var(--primary)';
+                setTimeout(() => {
+                    targetArticle.style.boxShadow = '';
+                }, 2000);
+            }
+        }, 300);
+        
+        closeMobileMenu();
+    });
+    
+    return article;
+}
+
+// Инициализация кнопок профилей
+function initProfileButtons() {
+    // Кнопки "Все материалы автора" в карточках
+    const viewProfileBtns = document.querySelectorAll('.view-profile-btn');
+    viewProfileBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const authorName = this.getAttribute('data-author');
+            openAuthorProfile(authorName);
+        });
+    });
+    
+    // Кнопка "Назад к авторам" в профиле
+    const backToProfilesBtn = document.querySelector('.back-to-profiles-btn');
+    if (backToProfilesBtn) {
+        backToProfilesBtn.addEventListener('click', function() {
+            showSection('profiles');
+            setActiveNavLink(document.querySelector('.nav-link[href="#profiles"]'));
+        });
+    }
+    
+    // Фильтры в профиле автора
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            filterAuthorMaterials(filter);
+            
+            // Обновляем активный фильтр
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+// Открытие профиля автора
+function openAuthorProfile(authorName) {
+    const author = authorsData[authorName];
+    if (!author) return;
+    
+    currentAuthorProfile = authorName;
+    
+    // Заполняем данные профиля
+    document.getElementById('profile-author-name').textContent = authorName;
+    document.getElementById('profile-author-role').textContent = author.role;
+    document.getElementById('profile-author-bio').textContent = author.bio;
+    
+    // Обновляем аватар
+    const avatarElement = document.getElementById('profile-avatar');
+    if (avatarElement) {
+        avatarElement.className = `avatar-placeholder large ${author.avatarColor}`;
+        avatarElement.innerHTML = `<i class="${author.avatar}"></i>`;
+    }
+    
+    // Обновляем статистику
+    const totalViews = author.articles.reduce((sum, articleId) => sum + (viewsData[articleId] || 0), 0);
+    const totalLikes = author.articles.reduce((sum, articleId) => sum + (likesData[articleId] || 0), 0);
+    
+    document.getElementById('profile-articles-count').textContent = author.articles.length;
+    document.getElementById('profile-views-count').textContent = formatViews(totalViews);
+    document.getElementById('profile-likes-count').textContent = formatViews(totalLikes);
+    
+    // Заполняем список материалов
+    populateAuthorProfileMaterials('all');
+    
+    // Показываем секцию профиля
+    showSection('author-profile');
+    
+    // Обновляем навигацию
+    setActiveNavLink(document.querySelector('.nav-link[href="#profiles"]'));
+}
+
+// Заполнение материалов в профиле автора
+function populateAuthorProfileMaterials(filter = 'all') {
+    if (!currentAuthorProfile) return;
+    
+    const author = authorsData[currentAuthorProfile];
+    const materialsList = document.getElementById('profile-materials-list');
+    
+    if (!materialsList) return;
+    
+    // Очищаем список
+    materialsList.innerHTML = '';
+    
+    // Фильтруем материалы
+    let filteredArticles = author.articles;
+    if (filter !== 'all') {
+        filteredArticles = author.articles.filter(articleId => {
+            const articleData = articlesData[articleId];
+            return articleData && articleData.type === filter;
+        });
+    }
+    
+    // Добавляем материалы
+    filteredArticles.forEach(articleId => {
+        const articleData = articlesData[articleId];
+        if (articleData) {
+            const materialCard = createAuthorMaterialCard(articleId, articleData);
+            materialsList.appendChild(materialCard);
+        }
+    });
+    
+    // Если материалов нет, показываем сообщение
+    if (filteredArticles.length === 0) {
+        materialsList.innerHTML = `
+            <div class="no-materials">
+                <i class="fas fa-inbox"></i>
+                <p>Нет материалов</p>
+            </div>
+        `;
+    }
+}
+
+// Создание карточки материала для профиля автора
+function createAuthorMaterialCard(articleId, articleData) {
+    const card = document.createElement('div');
+    card.className = 'author-material-card';
+    card.setAttribute('data-article-id', articleId);
+    
+    const views = viewsData[articleId] || 0;
+    const likes = likesData[articleId] || 0;
+    
+    card.innerHTML = `
+        <div class="material-card-header">
+            <div class="material-type-badge ${articleData.type}">
+                ${articleData.type === 'article' ? 'Статья' : 'Новость'}
+            </div>
+            <div class="material-date">${articleData.date}</div>
+        </div>
+        <div class="material-card-content">
+            <h3 class="material-title">${articleData.title}</h3>
+            <p class="material-excerpt">${articleData.excerpt}</p>
+        </div>
+        <div class="material-card-footer">
+            <div class="material-stats">
+                <div class="material-stat">
+                    <i class="far fa-eye"></i>
+                    <span>${formatViews(views)}</span>
+                </div>
+                <div class="material-stat">
+                    <i class="far fa-heart"></i>
+                    <span>${formatViews(likes)}</span>
+                </div>
+            </div>
+            <button class="view-material-btn" data-section="${articleData.section}" data-article="${articleId}">
+                <i class="fas fa-external-link-alt"></i>
+            </button>
+        </div>
+    `;
+    
+    // Добавляем обработчик клика на кнопку просмотра
+    const viewBtn = card.querySelector('.view-material-btn');
+    viewBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const section = this.getAttribute('data-section');
+        const articleId = this.getAttribute('data-article');
+        
+        showSection(section);
+        
+        // Прокручиваем к статье
+        setTimeout(() => {
+            const targetArticle = document.querySelector(`[data-article-id="${articleId}"]`);
+            if (targetArticle) {
+                targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Добавляем подсветку
+                targetArticle.style.boxShadow = '0 0 0 3px var(--primary)';
+                setTimeout(() => {
+                    targetArticle.style.boxShadow = '';
+                }, 3000);
+            }
+        }, 300);
+    });
+    
+    // Добавляем обработчик клика на всю карточку
+    card.addEventListener('click', function() {
+        const section = articleData.section;
+        showSection(section);
+        
+        // Прокручиваем к статье
+        setTimeout(() => {
+            const targetArticle = document.querySelector(`[data-article-id="${articleId}"]`);
+            if (targetArticle) {
+                targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Добавляем подсветку
+                targetArticle.style.boxShadow = '0 0 0 3px var(--primary)';
+                setTimeout(() => {
+                    targetArticle.style.boxShadow = '';
+                }, 3000);
+            }
+        }, 300);
+    });
+    
+    return card;
+}
+
+// Фильтрация материалов автора
+function filterAuthorMaterials(filter) {
+    populateAuthorProfileMaterials(filter);
+}
+
+// Инициализация модальных окон авторов
+function initAuthorModals() {
+    const modal = document.getElementById('author-modal');
+    const closeBtn = modal.querySelector('.modal-close');
+    
+    // Закрытие модального окна
+    closeBtn.addEventListener('click', closeAuthorModal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeAuthorModal();
+        }
+    });
+    
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeAuthorModal();
+        }
+    });
+}
+
+// Открытие модального окна автора
+function openAuthorModal(authorName) {
+    const modal = document.getElementById('author-modal');
+    const author = authorsData[authorName];
+    
+    if (!author) return;
+    
+    // Заполняем данные
+    document.getElementById('modal-author-name').textContent = authorName;
+    document.getElementById('modal-author-role').textContent = author.role;
+    document.getElementById('modal-author-bio').textContent = author.bio;
+    
+    // Обновляем статистику
+    const totalViews = author.articles.reduce((sum, articleId) => sum + (viewsData[articleId] || 0), 0);
+    const totalLikes = author.articles.reduce((sum, articleId) => sum + (likesData[articleId] || 0), 0);
+    
+    document.getElementById('modal-articles-count').textContent = author.articles.length;
+    document.getElementById('modal-views-count').textContent = formatViews(totalViews);
+    document.getElementById('modal-likes-count').textContent = formatViews(totalLikes);
+    
+    // Заполняем список статей
+    const articlesList = document.getElementById('modal-articles-list');
+    articlesList.innerHTML = '';
+    
+    author.articles.forEach(articleId => {
+        const articleData = articlesData[articleId];
+        if (articleData) {
+            const articleCard = createAuthorArticleCard(articleId, articleData);
+            articlesList.appendChild(articleCard);
+        }
+    });
+    
+    // Показываем модальное окно
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// Создание карточки статьи для модального окна
+function createAuthorArticleCard(articleId, articleData) {
+    const card = document.createElement('div');
+    card.className = 'author-article-card';
+    card.setAttribute('data-article-id', articleId);
+    
+    const views = viewsData[articleId] || 0;
+    const likes = likesData[articleId] || 0;
+    
+    card.innerHTML = `
+        <div class="article-card-header">
+            <div>
+                <div class="article-card-title">${articleData.title}</div>
+                <div class="article-card-date">${articleData.date}</div>
+            </div>
+        </div>
+        <div class="article-card-content">
+            ${articleData.excerpt}
+        </div>
+        <div class="article-card-actions">
+            <div class="article-card-section">${getSectionName(articleData.section)}</div>
+            <div class="article-card-stats">
+                <div class="article-stat">
+                    <i class="far fa-eye"></i>
+                    <span>${formatViews(views)}</span>
+                </div>
+                <div class="article-stat">
+                    <i class="far fa-heart"></i>
+                    <span>${formatViews(likes)}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Добавляем обработчик клика
+    card.addEventListener('click', function() {
+        const section = articleData.section;
+        closeAuthorModal();
+        
+        setTimeout(() => {
+            showSection(section);
+            
+            // Прокручиваем к статье
+            setTimeout(() => {
+                const targetArticle = document.querySelector(`[data-article-id="${articleId}"]`);
+                if (targetArticle) {
+                    targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Добавляем подсветку
+                    targetArticle.style.boxShadow = '0 0 0 3px var(--primary)';
+                    setTimeout(() => {
+                        targetArticle.style.boxShadow = '';
+                    }, 3000);
+                }
+            }, 300);
+        }, 300);
+    });
+    
+    return card;
+}
+
+// Закрытие модального окна автора
+function closeAuthorModal() {
+    const modal = document.getElementById('author-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// Реальные обновления для профилей
+function startProfilesRealtimeUpdates() {
+    // Обновляем статистику при изменении данных
+    const updateProfilesStats = () => {
+        updateAuthorsStats();
+        populateAuthorArticles();
+        
+        // Если открыт профиль автора, обновляем его тоже
+        if (currentAuthorProfile && document.getElementById('author-profile').classList.contains('hidden') === false) {
+            openAuthorProfile(currentAuthorProfile);
+        }
+    };
+    
+    // Слушаем изменения в данных
+    db.ref('views').on('value', updateProfilesStats);
+    db.ref('likes').on('value', updateProfilesStats);
+}
+
 // ==================== ЛОКАЛЬНОЕ ХРАНИЛИЩЕ (ЗАПАСНОЙ ВАРИАНТ) ====================
 
 function initWithLocalStorage() {
@@ -547,6 +1097,7 @@ function initWithLocalStorage() {
     collectAllArticles();
     initAllViewsCounters();
     initAllLikeButtons();
+    initProfilesSystem();
     startViewTracking();
 }
 
@@ -759,6 +1310,23 @@ function createImageModal(src, alt) {
     });
 }
 
+// Вспомогательные функции для профилей
+function getAuthorId(authorName) {
+    const names = authorName.split(' ');
+    return names[0].toLowerCase();
+}
+
+function getSectionName(sectionId) {
+    const sections = {
+        'home': 'Главная',
+        'news': 'Новости',
+        'articles': 'Статьи',
+        'gallery': 'Галерея',
+        'videos': 'Видео'
+    };
+    return sections[sectionId] || sectionId;
+}
+
 // Check mobile menu
 function checkMobileMenu() {
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
@@ -774,7 +1342,7 @@ function checkMobileMenu() {
 }
 
 // Добавьте отладочную информацию в консоль
-console.log('Firebase script with mobile menu loaded successfully');
+console.log('Firebase script with profiles system loaded successfully');
 
 // Инициализация при полной загрузке страницы
 window.addEventListener('load', function() {
@@ -801,402 +1369,3 @@ window.addEventListener('error', function(e) {
 window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
 });
-
-// ==================== СИСТЕМА ПРОФИЛЕЙ АВТОРОВ ====================
-
-// Данные авторов
-const authorsData = {
-    "Немятов Артём": {
-        role: "Главный редактор",
-        bio: "Главный редактор газеты «Душа компании». Увлекается писательством и журналистикой. Пишет глубокие философские статьи о жизни и взрослении.",
-        articles: ["article1"],
-        avatar: "fas fa-user",
-        avatarColor: "primary"
-    },
-    "Дябденко Богдан": {
-        role: "Фоторепортёр",
-        bio: "Фоторепортёр и автор статей. Специализируется на репортажах и новостях школьной жизни. Любит захватывать яркие моменты школьных событий.",
-        articles: ["article3", "article4"],
-        avatar: "fas fa-camera",
-        avatarColor: "accent"
-    },
-    "Иванова Анастасия": {
-        role: "Корреспондент",
-        bio: "Корреспондент газеты. Пишет о событиях школьной жизни и внешкольных активностях. Участвует в различных образовательных программах и лагерях.",
-        articles: ["article2"],
-        avatar: "fas fa-newspaper",
-        avatarColor: "secondary"
-    }
-};
-
-// Данные статей для связи с авторами
-const articlesData = {
-    "article1": {
-        title: "Взросление",
-        date: "21 сентября 2025",
-        section: "articles",
-        excerpt: "Мама говорила: \"Школьная дружба редко длится вечно. Появятся новые люди, а старые связи постепенно угаснут.\"",
-        author: "Немятов Артём"
-    },
-    "article2": {
-        title: "Пребывание в лагере",
-        date: "20 апреля 2025",
-        section: "news",
-        excerpt: "С 25 марта по 7 апреля учащаяся Анастасия Иванова посетила всероссийский детский лагерь «Смена».",
-        author: "Иванова Анастасия"
-    },
-    "article3": {
-        title: "Весна",
-        date: "18 апреля 2025",
-        section: "articles",
-        excerpt: "Итак, господа, наступила так называемая весна. Вокруг птицы занимаются своими делами, деревья оживают — красота, короче.",
-        author: "Дябденко Богдан"
-    },
-    "article4": {
-        title: "Публичное выступление",
-        date: "6 апреля 2025",
-        section: "news",
-        excerpt: "В минувшую пятницу в школе №1502 («Энергия») публично выступил Дябденко Богдан, поздравив всех учеников с началом каникул.",
-        author: "Дябденко Богдан"
-    }
-};
-
-// Инициализация системы профилей
-function initProfilesSystem() {
-    console.log('Инициализация системы профилей...');
-    
-    // Обновляем статистику авторов
-    updateAuthorsStats();
-    
-    // Заполняем списки статей
-    populateAuthorArticles();
-    
-    // Инициализируем модальные окна
-    initAuthorModals();
-    
-    // Слушаем изменения данных для обновления статистики
-    startProfilesRealtimeUpdates();
-}
-
-// Обновление статистики авторов
-function updateAuthorsStats() {
-    Object.keys(authorsData).forEach(authorName => {
-        const author = authorsData[authorName];
-        const authorArticles = author.articles;
-        
-        // Считаем общую статистику
-        let totalViews = 0;
-        let totalLikes = 0;
-        
-        authorArticles.forEach(articleId => {
-            totalViews += viewsData[articleId] || 0;
-            totalLikes += likesData[articleId] || 0;
-        });
-        
-        // Обновляем DOM
-        updateAuthorStatsDOM(authorName, authorArticles.length, totalViews, totalLikes);
-    });
-}
-
-// Обновление DOM статистики автора
-function updateAuthorStatsDOM(authorName, articlesCount, viewsCount, likesCount) {
-    const authorId = getAuthorId(authorName);
-    
-    // Обновляем карточку профиля
-    const articlesElement = document.getElementById(`${authorId}-articles`);
-    const viewsElement = document.getElementById(`${authorId}-views`);
-    const likesElement = document.getElementById(`${authorId}-likes`);
-    
-    if (articlesElement) articlesElement.textContent = articlesCount;
-    if (viewsElement) viewsElement.textContent = formatViews(viewsCount);
-    if (likesElement) likesElement.textContent = formatViews(likesCount);
-}
-
-// Заполнение списков статей авторов
-function populateAuthorArticles() {
-    Object.keys(authorsData).forEach(authorName => {
-        const author = authorsData[authorName];
-        const articlesListId = `${getAuthorId(authorName)}-articles-list`;
-        const articlesList = document.getElementById(articlesListId);
-        
-        if (articlesList) {
-            // Очищаем список
-            articlesList.innerHTML = '';
-            
-            // Добавляем статьи (максимум 3)
-            author.articles.slice(0, 3).forEach(articleId => {
-                const articleData = articlesData[articleId];
-                if (articleData) {
-                    const articleElement = createAuthorArticleElement(articleId, articleData);
-                    articlesList.appendChild(articleElement);
-                }
-            });
-            
-            // Если статей нет, показываем сообщение
-            if (author.articles.length === 0) {
-                articlesList.innerHTML = '<p class="no-articles">Пока нет материалов</p>';
-            }
-        }
-    });
-}
-
-// Создание элемента статьи для списка автора
-function createAuthorArticleElement(articleId, articleData) {
-    const article = document.createElement('div');
-    article.className = 'author-article-item';
-    article.setAttribute('data-article-id', articleId);
-    
-    const views = viewsData[articleId] || 0;
-    const likes = likesData[articleId] || 0;
-    
-    article.innerHTML = `
-        <div class="article-item-header">
-            <div>
-                <div class="article-item-title">${articleData.title}</div>
-                <div class="article-item-meta">
-                    <span>${articleData.date}</span>
-                    <span>${getSectionName(articleData.section)}</span>
-                </div>
-            </div>
-        </div>
-        <div class="article-item-stats">
-            <div class="article-stat">
-                <i class="far fa-eye"></i>
-                <span>${formatViews(views)}</span>
-            </div>
-            <div class="article-stat">
-                <i class="far fa-heart"></i>
-                <span>${formatViews(likes)}</span>
-            </div>
-        </div>
-    `;
-    
-    // Добавляем обработчик клика
-    article.addEventListener('click', function() {
-        const section = articleData.section;
-        showSection(section);
-        
-        // Прокручиваем к статье
-        setTimeout(() => {
-            const targetArticle = document.querySelector(`[data-article-id="${articleId}"]`);
-            if (targetArticle) {
-                targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Добавляем подсветку
-                targetArticle.style.boxShadow = '0 0 0 2px var(--primary)';
-                setTimeout(() => {
-                    targetArticle.style.boxShadow = '';
-                }, 2000);
-            }
-        }, 300);
-        
-        closeMobileMenu();
-    });
-    
-    return article;
-}
-
-// Инициализация модальных окон авторов
-function initAuthorModals() {
-    const modal = document.getElementById('author-modal');
-    const closeBtn = modal.querySelector('.modal-close');
-    const viewProfileBtns = document.querySelectorAll('.view-profile-btn');
-    
-    // Закрытие модального окна
-    closeBtn.addEventListener('click', closeAuthorModal);
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeAuthorModal();
-        }
-    });
-    
-    // Закрытие по Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-            closeAuthorModal();
-        }
-    });
-    
-    // Открытие модального окна по кнопке
-    viewProfileBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const authorName = this.getAttribute('data-author');
-            openAuthorModal(authorName);
-        });
-    });
-}
-
-// Открытие модального окна автора
-function openAuthorModal(authorName) {
-    const modal = document.getElementById('author-modal');
-    const author = authorsData[authorName];
-    
-    if (!author) return;
-    
-    // Заполняем данные
-    document.getElementById('modal-author-name').textContent = authorName;
-    document.getElementById('modal-author-role').textContent = author.role;
-    document.getElementById('modal-author-bio').textContent = author.bio;
-    
-    // Обновляем статистику
-    const totalViews = author.articles.reduce((sum, articleId) => sum + (viewsData[articleId] || 0), 0);
-    const totalLikes = author.articles.reduce((sum, articleId) => sum + (likesData[articleId] || 0), 0);
-    
-    document.getElementById('modal-articles-count').textContent = author.articles.length;
-    document.getElementById('modal-views-count').textContent = formatViews(totalViews);
-    document.getElementById('modal-likes-count').textContent = formatViews(totalLikes);
-    
-    // Заполняем список статей
-    const articlesList = document.getElementById('modal-articles-list');
-    articlesList.innerHTML = '';
-    
-    author.articles.forEach(articleId => {
-        const articleData = articlesData[articleId];
-        if (articleData) {
-            const articleCard = createAuthorArticleCard(articleId, articleData);
-            articlesList.appendChild(articleCard);
-        }
-    });
-    
-    // Показываем модальное окно
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-// Создание карточки статьи для модального окна
-function createAuthorArticleCard(articleId, articleData) {
-    const card = document.createElement('div');
-    card.className = 'author-article-card';
-    card.setAttribute('data-article-id', articleId);
-    
-    const views = viewsData[articleId] || 0;
-    const likes = likesData[articleId] || 0;
-    
-    card.innerHTML = `
-        <div class="article-card-header">
-            <div>
-                <div class="article-card-title">${articleData.title}</div>
-                <div class="article-card-date">${articleData.date}</div>
-            </div>
-        </div>
-        <div class="article-card-content">
-            ${articleData.excerpt}
-        </div>
-        <div class="article-card-actions">
-            <div class="article-card-section">${getSectionName(articleData.section)}</div>
-            <div class="article-card-stats">
-                <div class="article-stat">
-                    <i class="far fa-eye"></i>
-                    <span>${formatViews(views)}</span>
-                </div>
-                <div class="article-stat">
-                    <i class="far fa-heart"></i>
-                    <span>${formatViews(likes)}</span>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Добавляем обработчик клика
-    card.addEventListener('click', function() {
-        const section = articleData.section;
-        closeAuthorModal();
-        
-        setTimeout(() => {
-            showSection(section);
-            
-            // Прокручиваем к статье
-            setTimeout(() => {
-                const targetArticle = document.querySelector(`[data-article-id="${articleId}"]`);
-                if (targetArticle) {
-                    targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Добавляем подсветку
-                    targetArticle.style.boxShadow = '0 0 0 3px var(--primary)';
-                    setTimeout(() => {
-                        targetArticle.style.boxShadow = '';
-                    }, 3000);
-                }
-            }, 300);
-        }, 300);
-    });
-    
-    return card;
-}
-
-// Закрытие модального окна автора
-function closeAuthorModal() {
-    const modal = document.getElementById('author-modal');
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-}
-
-// Реальные обновления для профилей
-function startProfilesRealtimeUpdates() {
-    // Обновляем статистику при изменении данных
-    const updateProfilesStats = () => {
-        updateAuthorsStats();
-        populateAuthorArticles();
-    };
-    
-    // Слушаем изменения в данных
-    db.ref('views').on('value', updateProfilesStats);
-    db.ref('likes').on('value', updateProfilesStats);
-}
-
-// Вспомогательные функции
-function getAuthorId(authorName) {
-    const names = authorName.split(' ');
-    return names[0].toLowerCase();
-}
-
-function getSectionName(sectionId) {
-    const sections = {
-        'home': 'Главная',
-        'news': 'Новости',
-        'articles': 'Статьи',
-        'gallery': 'Галерея',
-        'videos': 'Видео'
-    };
-    return sections[sectionId] || sectionId;
-}
-
-// Обновляем функцию initSystems для включения профилей
-// Найдите существующую функцию initSystems и добавьте вызов initProfilesSystem:
-
-async function initSystems() {
-    try {
-        console.log('Загрузка данных из Firebase...');
-        
-        if (!db) {
-            throw new Error('Firebase не инициализирован');
-        }
-        
-        // Собираем все статьи в карту
-        collectAllArticles();
-        
-        // Загружаем данные из Firebase
-        await loadDataFromFirebase();
-        
-        // Инициализируем счетчики во всех статьях
-        initAllViewsCounters();
-        initAllLikeButtons();
-        
-        // Инициализируем систему профилей
-        initProfilesSystem();
-        
-        // Запускаем отслеживание просмотров
-        startViewTracking();
-        
-        // Слушаем реальные обновления из Firebase
-        startRealtimeUpdates();
-        
-        console.log('Все системы инициализированы');
-        
-    } catch (error) {
-        console.error('Ошибка инициализации:', error);
-        // Используем локальное хранилище
-        initWithLocalStorage();
-    }
-}
-
