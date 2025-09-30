@@ -536,6 +536,59 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Author Profile Section -->
+            <section id="author-profile" class="content-section hidden">
+                <div class="author-profile-header">
+                    <button class="back-to-profiles-btn">
+                        <i class="fas fa-arrow-left"></i> Назад к авторам
+                    </button>
+                    <div class="author-profile-main">
+                        <div class="author-profile-avatar">
+                            <div class="avatar-placeholder large" id="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="author-profile-info">
+                            <h1 id="profile-author-name">Автор</h1>
+                            <p class="author-profile-role" id="profile-author-role">Роль</p>
+                            <div class="author-profile-stats">
+                                <div class="stat">
+                                    <span class="stat-number" id="profile-articles-count">0</span>
+                                    <span class="stat-label">Материалов</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-number" id="profile-views-count">0</span>
+                                    <span class="stat-label">Просмотров</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-number" id="profile-likes-count">0</span>
+                                    <span class="stat-label">Лайков</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="author-profile-content">
+                    <div class="author-bio-section">
+                        <h2>Биография</h2>
+                        <p id="profile-author-bio">Биография автора...</p>
+                    </div>
+
+                    <div class="author-all-materials">
+                        <h2>Все материалы автора</h2>
+                        <div class="materials-filter">
+                            <button class="filter-btn active" data-filter="all">Все</button>
+                            <button class="filter-btn" data-filter="articles">Статьи</button>
+                            <button class="filter-btn" data-filter="news">Новости</button>
+                        </div>
+                        <div class="author-materials-grid" id="profile-materials-list">
+                            <!-- Материалы будут добавляться через JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
             
             <!-- Add Material Section -->
             <section id="add-material" class="content-section hidden">
@@ -679,4 +732,4 @@
     
     <script src="script.js"></script>
 </body>
-    </html>
+                        </html>
