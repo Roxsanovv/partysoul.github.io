@@ -44,7 +44,13 @@
     <!-- Navigation -->
     <nav id="main-nav">
         <div class="nav-container">
-            <ul>
+            <button class="mobile-menu-toggle" aria-label="Открыть меню">
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
+            </button>
+            
+            <ul class="nav-menu">
                 <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i><span>Главная</span></a></li>
                 <li><a href="#news" class="nav-link"><i class="fas fa-newspaper"></i><span>Новости</span></a></li>
                 <li><a href="#articles" class="nav-link"><i class="fas fa-pen"></i><span>Статьи</span></a></li>
@@ -52,6 +58,9 @@
                 <li><a href="#videos" class="nav-link"><i class="fas fa-video"></i><span>Видео</span></a></li>
                 <li><a href="#add-material" class="nav-link cta-button"><i class="fas fa-plus"></i><span>Добавить материал</span></a></li>
             </ul>
+            
+            <!-- Mobile Menu Overlay -->
+            <div class="mobile-menu-overlay"></div>
         </div>
     </nav>
     
@@ -486,4 +495,4 @@
     
     <script src="script.js"></script>
 </body>
-    </html>
+                            </html>
