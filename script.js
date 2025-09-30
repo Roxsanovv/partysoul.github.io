@@ -1,12 +1,12 @@
 // Конфигурация Firebase - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ
 const firebaseConfig = {
-    apiKey: "AIzaSyC5FKXH7a06_jXk5rkj_vsplGkga_CQ1aQ",
-    authDomain: "partysoul-64201.firebaseapp.com",
-    databaseURL: "https://partysoul-64201-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "partysoul-64201",
-    storageBucket: "partysoul-64201.firebasestorage.app",
-    messagingSenderId: "71365640479",
-    appId: "1:71365640479:web:d5653d89f4a858a14c702a"
+    apiKey: "ВАШ_API_KEY",
+    authDomain: "ВАШ_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://ВАШ_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "ВАШ_PROJECT_ID",
+    storageBucket: "ВАШ_PROJECT_ID.appspot.com",
+    messagingSenderId: "ВАШ_SENDER_ID",
+    appId: "ВАШ_APP_ID"
 };
 
 // Инициализация Firebase
@@ -30,29 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update current date
     updateCurrentDate();
     
-    // Create mobile menu button
-    const mobileMenuButton = document.createElement('button');
-    mobileMenuButton.className = 'mobile-menu-button';
-    mobileMenuButton.innerHTML = '<span></span><span></span><span></span>';
-    document.querySelector('nav .nav-container').prepend(mobileMenuButton);
-    
-    mobileMenuButton.addEventListener('click', function() {
-        this.classList.toggle('active');
-        const navList = document.querySelector('nav ul');
-        navList.classList.toggle('show');
-        
-        // Animate hamburger to X
-        const spans = this.querySelectorAll('span');
-        if (this.classList.contains('active')) {
-            spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-            spans[1].style.opacity = '0';
-            spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
-        } else {
-            spans[0].style.transform = '';
-            spans[1].style.opacity = '';
-            spans[2].style.transform = '';
-        }
-    });
+    // Initialize mobile menu
+    initMobileMenu();
     
     // Navigation
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -63,9 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setActiveNavLink(this);
             
             // Close mobile menu if open
-            if (mobileMenuButton.classList.contains('active')) {
-                mobileMenuButton.click();
-            }
+            closeMobileMenu();
         });
     });
     
@@ -121,6 +98,69 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', checkMobileMenu);
     checkMobileMenu();
 });
+
+// ==================== МОБИЛЬНОЕ МЕНЮ ====================
+
+function initMobileMenu() {
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    const overlay = document.querySelector('.mobile-menu-overlay');
+    
+    if (mobileMenuToggle && navMenu && overlay) {
+        mobileMenuToggle.addEventListener('click', function() {
+            toggleMobileMenu();
+        });
+        
+        overlay.addEventListener('click', function() {
+            closeMobileMenu();
+        });
+        
+        // Закрытие меню при клике на ссылку
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+        
+        // Закрытие меню при нажатии Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeMobileMenu();
+            }
+        });
+    }
+}
+
+function toggleMobileMenu() {
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    const overlay = document.querySelector('.mobile-menu-overlay');
+    
+    mobileMenuToggle.classList.toggle('active');
+    navMenu.classList.toggle('mobile-active');
+    navMenu.classList.toggle('active');
+    overlay.classList.toggle('active');
+    
+    // Блокировка скролла
+    document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+}
+
+function closeMobileMenu() {
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    const overlay = document.querySelector('.mobile-menu-overlay');
+    
+    mobileMenuToggle.classList.remove('active');
+    navMenu.classList.remove('mobile-active');
+    navMenu.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function checkMobileMenu() {
+    // Автоматически закрываем мобильное меню при изменении размера на десктоп
+    if (window.innerWidth > 768) {
+        closeMobileMenu();
+    }
+}
 
 // ==================== ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ====================
 
@@ -721,16 +761,43 @@ function createImageModal(src, alt) {
 
 // Check mobile menu
 function checkMobileMenu() {
-    const mobileMenuButton = document.querySelector('.mobile-menu-button');
-    const navList = document.querySelector('nav ul');
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
     
     if (window.innerWidth <= 768) {
-        mobileMenuButton.style.display = 'flex';
-        navList.classList.remove('show');
+        mobileMenuToggle.style.display = 'block';
+        navMenu.classList.add('mobile-menu-hidden');
     } else {
-        mobileMenuButton.style.display = 'none';
-        navList.classList.remove('show');
+        mobileMenuToggle.style.display = 'none';
+        navMenu.classList.remove('mobile-menu-hidden');
     }
 }
 
-console.log('Firebase script with global tracking loaded successfully');
+// Добавьте отладочную информацию в консоль
+console.log('Firebase script with mobile menu loaded successfully');
+
+// Инициализация при полной загрузке страницы
+window.addEventListener('load', function() {
+    console.log('Страница полностью загружена');
+    
+    // Проверяем, есть ли элементы для инициализации
+    const articles = document.querySelectorAll('.article');
+    console.log(`Найдено статей на странице: ${articles.length}`);
+    
+    // Проверяем Firebase соединение
+    if (db) {
+        console.log('Firebase подключен успешно');
+    } else {
+        console.warn('Firebase не подключен, используется локальное хранилище');
+    }
+});
+
+// Обработка ошибок
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
+});
+
+// Обработка отклоненных промисов
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Unhandled promise rejection:', e.reason);
+});
