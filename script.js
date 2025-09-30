@@ -1,12 +1,12 @@
 // Конфигурация Firebase - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ
 const firebaseConfig = {
-    apiKey: "ВАШ_API_KEY",
-    authDomain: "ВАШ_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://ВАШ_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "ВАШ_PROJECT_ID",
-    storageBucket: "ВАШ_PROJECT_ID.appspot.com",
-    messagingSenderId: "ВАШ_SENDER_ID",
-    appId: "ВАШ_APP_ID"
+    apiKey: "AIzaSyC5FKXH7a06_jXk5rkj_vsplGkga_CQ1aQ",
+    authDomain: "partysoul-64201.firebaseapp.com",
+    databaseURL: "https://partysoul-64201-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "partysoul-64201",
+    storageBucket: "partysoul-64201.firebasestorage.app",
+    messagingSenderId: "71365640479",
+    appId: "1:71365640479:web:d5653d89f4a858a14c702a"
 };
 
 // Инициализация Firebase
@@ -801,3 +801,4 @@ window.addEventListener('error', function(e) {
 window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
 });
+
