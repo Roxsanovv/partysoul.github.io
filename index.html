@@ -56,7 +56,7 @@
                 <li><a href="#articles" class="nav-link"><i class="fas fa-pen"></i><span>Статьи</span></a></li>
                 <li><a href="#gallery" class="nav-link"><i class="fas fa-images"></i><span>Галерея</span></a></li>
                 <li><a href="#videos" class="nav-link"><i class="fas fa-video"></i><span>Видео</span></a></li>
-                <li><a href="#profiles" class="nav-link"><i class="fas fa-user"></i><span>Авторы</span></a></li>
+                <li><a href="#authors" class="nav-link"><i class="fas fa-users"></i><span>Авторы</span></a></li>
                 <li><a href="#add-material" class="nav-link cta-button"><i class="fas fa-plus"></i><span>Добавить материал</span></a></li>
             </ul>
             
@@ -398,195 +398,15 @@
                 </div>
             </section>
 
-            <!-- Profiles Section -->
-            <section id="profiles" class="content-section hidden">
+            <!-- Authors Section -->
+            <section id="authors" class="content-section hidden">
                 <div class="section-header">
                     <h2>Наши авторы</h2>
                     <div class="section-divider"></div>
                 </div>
                 
-                <div class="profiles-grid">
-                    <!-- Профиль Немятова Артёма -->
-                    <div class="profile-card card" data-author="Немятов Артём">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <div class="avatar-placeholder">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            </div>
-                            <div class="profile-info">
-                                <h3>Немятов Артём</h3>
-                                <p class="profile-role">Главный редактор</p>
-                                <div class="profile-stats">
-                                    <div class="stat">
-                                        <span class="stat-number" id="artem-articles">2</span>
-                                        <span class="stat-label">Статьи</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-number" id="artem-views">0</span>
-                                        <span class="stat-label">Просмотры</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-number" id="artem-likes">0</span>
-                                        <span class="stat-label">Лайки</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="profile-content">
-                            <h4>Биография</h4>
-                            <p>Главный редактор газеты «Душа компании». Увлекается писательством и журналистикой.</p>
-                            
-                            <h4>Последние работы</h4>
-                            <div class="author-articles" id="artem-articles-list">
-                                <!-- Статьи будут добавляться через JavaScript -->
-                            </div>
-                        </div>
-                        <div class="profile-footer">
-                            <button class="view-profile-btn" data-author="Немятов Артём">
-                                <i class="fas fa-eye"></i> Все материалы автора
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Профиль Дябденко Богдана -->
-                    <div class="profile-card card" data-author="Дябденко Богдан">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <div class="avatar-placeholder bg-accent">
-                                    <i class="fas fa-camera"></i>
-                                </div>
-                            </div>
-                            <div class="profile-info">
-                                <h3>Дябденко Богдан</h3>
-                                <p class="profile-role">Фоторепортёр</p>
-                                <div class="profile-stats">
-                                    <div class="stat">
-                                        <span class="stat-number" id="bogdan-articles">2</span>
-                                        <span class="stat-label">Статьи</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-number" id="bogdan-views">0</span>
-                                        <span class="stat-label">Просмотры</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-number" id="bogdan-likes">0</span>
-                                        <span class="stat-label">Лайки</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="profile-content">
-                            <h4>Биография</h4>
-                            <p>Фоторепортёр и автор статей. Специализируется на репортажах и новостях школьной жизни.</p>
-                            
-                            <h4>Последние работы</h4>
-                            <div class="author-articles" id="bogdan-articles-list">
-                                <!-- Статьи будут добавляться через JavaScript -->
-                            </div>
-                        </div>
-                        <div class="profile-footer">
-                            <button class="view-profile-btn" data-author="Дябденко Богдан">
-                                <i class="fas fa-eye"></i> Все материалы автора
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Профиль Ивановой Анастасии -->
-                    <div class="profile-card card" data-author="Иванова Анастасия">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <div class="avatar-placeholder bg-secondary">
-                                    <i class="fas fa-newspaper"></i>
-                                </div>
-                            </div>
-                            <div class="profile-info">
-                                <h3>Иванова Анастасия</h3>
-                                <p class="profile-role">Корреспондент</p>
-                                <div class="profile-stats">
-                                    <div class="stat">
-                                        <span class="stat-number" id="nastya-articles">1</span>
-                                        <span class="stat-label">Статьи</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-number" id="nastya-views">0</span>
-                                        <span class="stat-label">Просмотры</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-number" id="nastya-likes">0</span>
-                                        <span class="stat-label">Лайки</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="profile-content">
-                            <h4>Биография</h4>
-                            <p>Корреспондент газеты. Пишет о событиях школьной жизни и внешкольных активностях.</p>
-                            
-                            <h4>Последние работы</h4>
-                            <div class="author-articles" id="nastya-articles-list">
-                                <!-- Статьи будут добавляться через JavaScript -->
-                            </div>
-                        </div>
-                        <div class="profile-footer">
-                            <button class="view-profile-btn" data-author="Иванова Анастасия">
-                                <i class="fas fa-eye"></i> Все материалы автора
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Author Profile Section -->
-            <section id="author-profile" class="content-section hidden">
-                <div class="author-profile-header">
-                    <button class="back-to-profiles-btn">
-                        <i class="fas fa-arrow-left"></i> Назад к авторам
-                    </button>
-                    <div class="author-profile-main">
-                        <div class="author-profile-avatar">
-                            <div class="avatar-placeholder large" id="profile-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        </div>
-                        <div class="author-profile-info">
-                            <h1 id="profile-author-name">Автор</h1>
-                            <p class="author-profile-role" id="profile-author-role">Роль</p>
-                            <div class="author-profile-stats">
-                                <div class="stat">
-                                    <span class="stat-number" id="profile-articles-count">0</span>
-                                    <span class="stat-label">Материалов</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-number" id="profile-views-count">0</span>
-                                    <span class="stat-label">Просмотров</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-number" id="profile-likes-count">0</span>
-                                    <span class="stat-label">Лайков</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="author-profile-content">
-                    <div class="author-bio-section">
-                        <h2>Биография</h2>
-                        <p id="profile-author-bio">Биография автора...</p>
-                    </div>
-
-                    <div class="author-all-materials">
-                        <h2>Все материалы автора</h2>
-                        <div class="materials-filter">
-                            <button class="filter-btn active" data-filter="all">Все</button>
-                            <button class="filter-btn" data-filter="articles">Статьи</button>
-                            <button class="filter-btn" data-filter="news">Новости</button>
-                        </div>
-                        <div class="author-materials-grid" id="profile-materials-list">
-                            <!-- Материалы будут добавляться через JavaScript -->
-                        </div>
-                    </div>
+                <div class="authors-grid">
+                    <!-- Авторы будут добавлены через JavaScript -->
                 </div>
             </section>
             
@@ -648,51 +468,31 @@
                     <a href="#gallery" class="sidebar-link">Все фото <i class="fas fa-arrow-right"></i></a>
                 </div>
             </section>
-        </aside>
-    </div>
 
-    <!-- Author Profile Modal -->
-    <div id="author-modal" class="modal hidden">
-        <div class="modal-content author-modal">
-            <button class="modal-close">&times;</button>
-            <div class="author-modal-header">
-                <div class="author-modal-avatar">
-                    <div class="avatar-placeholder large">
-                        <i class="fas fa-user"></i>
-                    </div>
+            <!-- Authors Preview -->
+            <section class="sidebar-section card">
+                <div class="sidebar-header">
+                    <h3>Наши авторы</h3>
                 </div>
-                <div class="author-modal-info">
-                    <h2 id="modal-author-name"></h2>
-                    <p class="author-modal-role" id="modal-author-role"></p>
-                    <div class="author-modal-stats">
-                        <div class="stat">
-                            <span class="stat-number" id="modal-articles-count">0</span>
-                            <span class="stat-label">Материалов</span>
+                <div class="sidebar-authors">
+                    <div class="author-preview">
+                        <div class="author-mini">
+                            <img src="img/authors/artem.jpg" alt="Немятов Артём">
+                            <span>Немятов Артём</span>
                         </div>
-                        <div class="stat">
-                            <span class="stat-number" id="modal-views-count">0</span>
-                            <span class="stat-label">Просмотров</span>
+                        <div class="author-mini">
+                            <img src="img/authors/bogdan.jpg" alt="Дябденко Богдан">
+                            <span>Дябденко Богдан</span>
                         </div>
-                        <div class="stat">
-                            <span class="stat-number" id="modal-likes-count">0</span>
-                            <span class="stat-label">Лайков</span>
+                        <div class="author-mini">
+                            <img src="img/authors/nastya.jpg" alt="Иванова Анастасия">
+                            <span>Иванова Анастасия</span>
                         </div>
                     </div>
+                    <a href="#authors" class="sidebar-link">Все авторы <i class="fas fa-arrow-right"></i></a>
                 </div>
-            </div>
-            <div class="author-modal-content">
-                <div class="author-bio">
-                    <h3>Биография</h3>
-                    <p id="modal-author-bio"></p>
-                </div>
-                <div class="author-all-articles">
-                    <h3>Все материалы автора</h3>
-                    <div class="author-articles-grid" id="modal-articles-list">
-                        <!-- Материалы будут добавляться через JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
+            </section>
+        </aside>
     </div>
     
     <!-- Footer -->
