@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Газета «Душа компании»</title>
+    <title>Газета «Душа компании 2.0»</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="ico/logo.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 </head>
 <body class="dark-theme">
     
@@ -32,7 +33,7 @@
         <div class="header-main">
             <div class="header-main-container">
                 <div class="logo-modern">
-                    <div class="logo">«Душа компании»</div>
+                    <div class="logo">«Душа компании 2.0»</div>
                     <div class="slogan">Официальная газета нашей компании</div>
                 </div>
             </div>
@@ -44,24 +45,20 @@
     <!-- Navigation -->
     <nav id="main-nav">
         <div class="nav-container">
-            <button class="mobile-menu-toggle" aria-label="Открыть меню">
-                <span class="hamburger-box">
-                    <span class="hamburger-inner"></span>
-                </span>
-            </button>
-            
-            <ul class="nav-menu">
+            <ul>
                 <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i><span>Главная</span></a></li>
                 <li><a href="#news" class="nav-link"><i class="fas fa-newspaper"></i><span>Новости</span></a></li>
                 <li><a href="#articles" class="nav-link"><i class="fas fa-pen"></i><span>Статьи</span></a></li>
                 <li><a href="#gallery" class="nav-link"><i class="fas fa-images"></i><span>Галерея</span></a></li>
                 <li><a href="#videos" class="nav-link"><i class="fas fa-video"></i><span>Видео</span></a></li>
-                <li><a href="#authors" class="nav-link"><i class="fas fa-users"></i><span>Авторы</span></a></li>
+                <li><a href="#friends" class="nav-link"><i class="fas fa-users"></i><span>Друзья</span></a></li>
                 <li><a href="#add-material" class="nav-link cta-button"><i class="fas fa-plus"></i><span>Добавить материал</span></a></li>
+                <li id="auth-nav-item">
+                    <a href="#profile" class="nav-link" id="auth-link">
+                        <i class="fas fa-user"></i><span>Профиль</span>
+                    </a>
+                </li>
             </ul>
-            
-            <!-- Mobile Menu Overlay -->
-            <div class="mobile-menu-overlay"></div>
         </div>
     </nav>
     
@@ -94,9 +91,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article1">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article1">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -123,9 +120,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article2">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article2">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -149,9 +146,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article3">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article3">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -181,9 +178,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article4">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article4">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -218,9 +215,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article2">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article2">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -253,9 +250,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article4">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article4">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -288,9 +285,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article1">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article1">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -314,9 +311,9 @@
                     </div>
                     <div class="article-actions">
                         <div class="article-likes">
-                            <button class="like-btn" data-article="article3">
-                                <i class="far fa-heart"></i>
-                                <span class="like-count">0</span>
+                            <button class="fire-btn" data-article="article3">
+                                <i class="fas fa-fire"></i>
+                                <span class="fire-count">0</span>
                             </button>
                         </div>
                     </div>
@@ -397,16 +394,74 @@
                     </div>
                 </div>
             </section>
-
-            <!-- Authors Section -->
-            <section id="authors" class="content-section hidden">
+            
+            <!-- Friends Section -->
+            <section id="friends" class="content-section hidden">
                 <div class="section-header">
-                    <h2>Наши авторы</h2>
+                    <h2>Друзья</h2>
                     <div class="section-divider"></div>
                 </div>
                 
-                <div class="authors-grid">
-                    <!-- Авторы будут добавлены через JavaScript -->
+                <div class="friends-container">
+                    <!-- Поиск друзей -->
+                    <div class="search-friends card">
+                        <div class="search-header">
+                            <h3>Найти друзей</h3>
+                            <div class="search-box">
+                                <input type="text" id="friend-search" placeholder="Введите имя или username...">
+                                <button class="btn-primary" id="search-friends-btn">
+                                    <i class="fas fa-search"></i> Поиск
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="search-results" id="search-results">
+                            <div class="no-results">
+                                <i class="fas fa-search"></i>
+                                <p>Введите имя или username для поиска</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Список друзей -->
+                    <div class="friends-list card">
+                        <div class="friends-header">
+                            <h3>Мои друзья <span class="friends-count" id="friends-count">(0)</span></h3>
+                        </div>
+                        <div class="friends-grid" id="friends-list">
+                            <!-- Список друзей будет здесь -->
+                            <div class="no-friends" id="no-friends">
+                                <i class="fas fa-users"></i>
+                                <p>У вас пока нет друзей</p>
+                                <p class="hint">Найдите пользователей и добавьте их в друзья!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Входящие заявки -->
+                    <div class="friend-requests card" id="friend-requests-section">
+                        <div class="requests-header">
+                            <h3>Заявки в друзья <span class="requests-count" id="requests-count">(0)</span></h3>
+                        </div>
+                        <div class="requests-list" id="friend-requests-list">
+                            <div class="no-results">
+                                <i class="fas fa-inbox"></i>
+                                <p>Нет входящих заявок</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Friend Profile Section -->
+            <section id="friend-profile" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Профиль пользователя</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <div class="friend-profile-container" id="friend-profile-container">
+                    <!-- Профиль друга будет загружен здесь -->
                 </div>
             </section>
             
@@ -422,6 +477,142 @@
                     <div class="telegram-link">
                         <i class="fab fa-telegram"></i>
                         <a href="https://t.me/+rAam8JzTMBRkNDEy">https://t.me/+rAam8JzTMBRkNDEy</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Мой профиль</h2>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <div class="profile-container">
+                    <div class="profile-card card">
+                        <div class="profile-header">
+                            <div class="profile-avatar-section">
+                                <div class="profile-avatar-large" id="profile-page-avatar">
+                                    <span id="profile-avatar-text">U</span>
+                                </div>
+                                <div class="avatar-actions">
+                                    <input type="file" id="profile-avatar-upload" accept="image/*" style="display: none;">
+                                    <button class="btn-secondary" id="profile-change-avatar-btn">
+                                        <i class="fas fa-camera"></i> Сменить аватар
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="profile-info-main">
+                                <h3 id="profile-page-name">Пользователь</h3>
+                                <p class="profile-username" id="profile-page-username">@username</p>
+                                <div class="profile-stats">
+                                    <div class="profile-stat">
+                                        <span class="stat-value" id="profile-page-fires">0</span>
+                                        <span class="stat-label">Огоньков получено</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-details-grid">
+                            <div class="profile-detail-item">
+                                <label>Дата регистрации:</label>
+                                <span id="profile-page-reg-date">-</span>
+                            </div>
+                            <div class="profile-detail-item">
+                                <label>Статус:</label>
+                                <span class="status-badge active">Активен</span>
+                            </div>
+                            <div class="profile-detail-item">
+                                <label>Друзей:</label>
+                                <span id="profile-page-friends-count">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-actions-grid">
+                            <button class="btn-primary" id="profile-edit-btn">
+                                <i class="fas fa-edit"></i> Редактировать профиль
+                            </button>
+                            <button class="btn-secondary" id="profile-wall-btn">
+                                <i class="fas fa-stream"></i> Моя стена
+                            </button>
+                            <button class="btn-secondary" id="profile-logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Выйти
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Edit Profile Form -->
+                    <div class="edit-profile-card card hidden" id="edit-profile-section">
+                        <div class="edit-profile-header">
+                            <h3>Редактирование профиля</h3>
+                            <button class="btn-text" id="edit-profile-cancel-btn">
+                                <i class="fas fa-arrow-left"></i> Назад к профилю
+                            </button>
+                        </div>
+                        
+                        <form id="profile-edit-form">
+                            <div class="form-group">
+                                <label for="profile-edit-name">Имя</label>
+                                <input type="text" id="profile-edit-name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="profile-edit-username">Username (опционально)</label>
+                                <div class="input-with-prefix">
+                                    <span class="input-prefix">@</span>
+                                    <input type="text" id="profile-edit-username" placeholder="username">
+                                </div>
+                                <div class="input-hint">
+                                    Только латинские буквы, цифры и нижнее подчеркивание (3-20 символов). Оставьте пустым, если не нужен.
+                                </div>
+                                <div class="username-availability" id="profile-username-availability">
+                                    Оставьте пустым, если не хотите устанавливать username
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" id="profile-cancel-edit-btn">Отмена</button>
+                                <button type="submit" class="btn-primary" id="profile-save-btn">Сохранить изменения</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Wall Section -->
+                    <div class="wall-section card hidden" id="wall-section">
+                        <div class="wall-header">
+                            <h3>Моя стена</h3>
+                            <button class="btn-text" id="wall-back-btn">
+                                <i class="fas fa-arrow-left"></i> Назад к профилю
+                            </button>
+                        </div>
+                        
+                        <!-- Форма добавления поста -->
+                        <div class="add-post-form card">
+                            <h4>Добавить запись</h4>
+                            <form id="wall-post-form">
+                                <div class="form-group">
+                                    <textarea id="wall-post-content" placeholder="Что у вас нового?" rows="3" maxlength="500"></textarea>
+                                    <div class="char-counter">
+                                        <span id="char-count">0</span>/500 символов
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Опубликовать
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Список постов -->
+                        <div class="wall-posts" id="wall-posts">
+                            <div class="no-posts">
+                                <i class="fas fa-stream"></i>
+                                <p>На вашей стене пока нет записей</p>
+                                <p class="hint">Будьте первым, кто поделится чем-то интересным!</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -468,30 +659,6 @@
                     <a href="#gallery" class="sidebar-link">Все фото <i class="fas fa-arrow-right"></i></a>
                 </div>
             </section>
-
-            <!-- Authors Preview -->
-            <section class="sidebar-section card">
-                <div class="sidebar-header">
-                    <h3>Наши авторы</h3>
-                </div>
-                <div class="sidebar-authors">
-                    <div class="author-preview">
-                        <div class="author-mini">
-                            <img src="img/authors/artem.jpg" alt="Немятов Артём">
-                            <span>Немятов Артём</span>
-                        </div>
-                        <div class="author-mini">
-                            <img src="img/authors/bogdan.jpg" alt="Дябденко Богдан">
-                            <span>Дябденко Богдан</span>
-                        </div>
-                        <div class="author-mini">
-                            <img src="img/authors/nastya.jpg" alt="Иванова Анастасия">
-                            <span>Иванова Анастасия</span>
-                        </div>
-                    </div>
-                    <a href="#authors" class="sidebar-link">Все авторы <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </section>
         </aside>
     </div>
     
@@ -525,6 +692,82 @@
         </div>
     </footer>
     
+    <!-- Модальные окна для авторизации -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h3>Вход в систему</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Войти</button>
+                </form>
+                <div class="auth-switch">
+                    <p>Нет аккаунта? <a href="#" id="switch-to-register">Зарегистрироваться</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h3>Регистрация</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-name">Имя</label>
+                        <input type="text" id="register-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Пароль</label>
+                        <input type="password" id="register-password" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Подтвердите пароль</label>
+                        <input type="password" id="register-confirm" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Зарегистрироваться</button>
+                </form>
+                <div class="auth-switch">
+                    <p>Уже есть аккаунт? <a href="#" id="switch-to-login">Войти</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора аватара -->
+    <div id="avatar-picker-modal" class="modal hidden">
+        <div class="modal-content card avatar-picker-modal">
+            <div class="modal-header">
+                <h3>Выберите аватар</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-picker">
+                    <div class="avatar-grid" id="avatar-grid">
+                        <!-- Аватары будут добавлены через JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Scroll to Top Button -->
     <button class="scroll-to-top">
         <i class="fas fa-arrow-up"></i>
@@ -532,4 +775,4 @@
     
     <script src="script.js"></script>
 </body>
-                        </html>
+</html>
