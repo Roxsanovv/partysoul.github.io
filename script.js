@@ -2385,3 +2385,4 @@ function checkMobileMenu() {
 }
 
 console.log('Firebase script with OPTIMIZED wall system loaded successfully');
+
