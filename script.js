@@ -606,10 +606,8 @@ async function getFriendRealStats(friendUid) {
         const friendFriends = friendsSnapshot.val() || {};
         const friendsCount = Object.keys(friendFriends).length;
         
-        // Получаем количество огоньков друга
-        const userSnapshot = await db.ref('users/' + friendUid).once('value');
-        const userData = userSnapshot.val() || {};
-        const totalFires = userData.stats?.totalFires || 0;
+        // Получаем реальное количество огоньков друга из всех источников
+        const totalFires = await calculateUserTotalFires(friendUid);
         
         console.log(`Статистика друга ${friendUid}:`, { friendsCount, totalFires });
         
@@ -624,6 +622,39 @@ async function getFriendRealStats(friendUid) {
             friendsCount: 0,
             totalFires: 0
         };
+    }
+}
+
+// Функция для расчета общего количества огоньков пользователя
+async function calculateUserTotalFires(userId) {
+    try {
+        let totalFires = 0;
+        
+        // Считаем огоньки из статей
+        const articlesSnapshot = await db.ref('articles').once('value');
+        const articles = articlesSnapshot.val() || {};
+        
+        Object.values(articles).forEach(article => {
+            if (article.authorId === userId) {
+                totalFires += article.fires || 0;
+            }
+        });
+        
+        // Считаем огоньки из постов на стене
+        const wallSnapshot = await db.ref('wall/' + userId).once('value');
+        const wallPosts = wallSnapshot.val() || {};
+        
+        Object.values(wallPosts).forEach(post => {
+            totalFires += post.fires || 0;
+        });
+        
+        console.log(`Общее количество огоньков для ${userId}: ${totalFires}`);
+        
+        return totalFires;
+        
+    } catch (error) {
+        console.error('Ошибка расчета огоньков:', error);
+        return 0;
     }
 }
 
@@ -708,64 +739,18 @@ async function recalculateUserFires(userId) {
     if (!db) return 0;
     
     try {
-        // Считаем огоньки из статей
-        const articlesSnapshot = await db.ref('articles').once('value');
-        const articles = articlesSnapshot.val() || {};
-        
-        let articlesFires = 0;
-        Object.values(articles).forEach(article => {
-            if (article.authorId === userId) {
-                articlesFires += article.fires || 0;
-            }
-        });
-        
-        // Считаем огоньки из постов на стене
-        const wallSnapshot = await db.ref('wall/' + userId).once('value');
-        const wallPosts = wallSnapshot.val() || {};
-        
-        let wallFires = 0;
-        Object.values(wallPosts).forEach(post => {
-            wallFires += post.fires || 0;
-        });
-        
-        const totalFires = articlesFires + wallFires;
+        const totalFires = await calculateUserTotalFires(userId);
         
         // Обновляем в базе
         await db.ref('users/' + userId + '/stats/totalFires').set(totalFires);
         
-        console.log(`Пересчитаны огоньки для ${userId}: ${totalFires} (статьи: ${articlesFires}, стена: ${wallFires})`);
+        console.log(`Пересчитаны огоньки для ${userId}: ${totalFires}`);
         
         return totalFires;
         
     } catch (error) {
         console.error('Ошибка пересчета огоньков:', error);
         return 0;
-    }
-}
-
-// Функция для исправления статистики всех пользователей
-async function fixAllUsersStats() {
-    if (!db || !currentUser) return;
-    
-    try {
-        showNotification('Исправление статистики...', 'warning');
-        
-        const usersSnapshot = await db.ref('users').once('value');
-        const users = usersSnapshot.val() || {};
-        
-        let fixedCount = 0;
-        
-        for (const userId of Object.keys(users)) {
-            const totalFires = await recalculateUserFires(userId);
-            console.log(`Исправлена статистика для ${userId}: ${totalFires} огоньков`);
-            fixedCount++;
-        }
-        
-        showNotification(`Статистика исправлена для ${fixedCount} пользователей`, 'success');
-        
-    } catch (error) {
-        console.error('Ошибка исправления статистики:', error);
-        showNotification('Ошибка исправления статистики', 'error');
     }
 }
 
