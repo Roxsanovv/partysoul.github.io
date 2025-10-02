@@ -29,7 +29,7 @@ let friendsData = {};
 let friendRequests = {};
 let wallPosts = {};
 let currentWallUserId = null;
-let wallPostsCache = new Map(); // Кэш постов стены
+let wallPostsCache = new Map();
 
 // Коллекция предустановленных emoji аватаров
 const defaultAvatars = [
@@ -167,7 +167,615 @@ document.addEventListener('DOMContentLoaded', function() {
     checkMobileMenu();
 });
 
-// ==================== СИСТЕМА СТЕНЫ (ИСПРАВЛЕННАЯ) ====================
+// ==================== СИСТЕМА ДРУЗЕЙ С ИСПРАВЛЕННОЙ СТАТИСТИКОЙ ====================
+
+function initFriendsSystem() {
+    console.log('Инициализация системы друзей...');
+    
+    // Поиск друзей
+    const searchBtn = document.getElementById('search-friends-btn');
+    const searchInput = document.getElementById('friend-search');
+    
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchFriends);
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchFriends();
+            }
+        });
+    }
+    
+    // Загружаем данные друзей при входе пользователя
+    if (currentUser) {
+        loadFriendsData();
+    }
+}
+
+// Загрузка данных друзей
+function loadFriendsData() {
+    if (!currentUser || !db) return;
+    
+    console.log('Загрузка данных друзей для пользователя:', currentUser.uid);
+    
+    // Загружаем список друзей
+    db.ref('friends/' + currentUser.uid).on('value', (snapshot) => {
+        friendsData = snapshot.val() || {};
+        updateFriendsList();
+        console.log('Данные друзей загружены:', friendsData);
+    });
+    
+    // Загружаем входящие заявки
+    db.ref('friendRequests/' + currentUser.uid).on('value', (snapshot) => {
+        friendRequests = snapshot.val() || {};
+        updateFriendRequests();
+        console.log('Заявки в друзья загружены:', friendRequests);
+    });
+}
+
+// Обновление списка заявок и счётчика
+function updateFriendRequests() {
+    const requestsList = document.getElementById('friend-requests-list');
+    const requestsCount = document.getElementById('requests-count');
+    const requestsSection = document.getElementById('friend-requests-section');
+    
+    const requestUids = Object.keys(friendRequests);
+    const pendingCount = requestUids.length;
+    
+    requestsCount.textContent = `(${pendingCount})`;
+    
+    // Обновляем бейдж в навигации
+    updateFriendsNavBadge(pendingCount);
+    
+    if (pendingCount === 0) {
+        requestsList.innerHTML = '<div class="no-results"><i class="fas fa-inbox"></i><p>Нет входящих заявок</p></div>';
+        return;
+    }
+    
+    let html = '';
+    
+    requestUids.forEach(uid => {
+        const request = friendRequests[uid];
+        
+        html += `
+            <div class="request-item">
+                <div class="request-info">
+                    <div class="request-avatar">
+                        ${request.fromAvatar || (request.fromName ? request.fromName.charAt(0).toUpperCase() : 'U')}
+                    </div>
+                    <div class="request-details">
+                        <h4>${request.fromName || 'Пользователь'}</h4>
+                        ${request.fromUsername ? `<div class="request-username">@${request.fromUsername}</div>` : ''}
+                        <div class="request-date">${new Date(request.timestamp).toLocaleDateString('ru-RU')}</div>
+                    </div>
+                </div>
+                <div class="request-actions">
+                    <button class="btn-accept" onclick="acceptFriendRequest('${uid}')">
+                        <i class="fas fa-check"></i> Принять
+                    </button>
+                    <button class="btn-decline" onclick="declineFriendRequest('${uid}')">
+                        <i class="fas fa-times"></i> Отклонить
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    requestsList.innerHTML = html;
+}
+
+// Функция для обновления бейджа в навигации
+function updateFriendsNavBadge(count) {
+    const friendsNavLink = document.querySelector('.nav-link[href="#friends"]');
+    if (!friendsNavLink) return;
+    
+    let badge = friendsNavLink.querySelector('.notification-badge');
+    
+    // Удаляем существующий бейдж если нет заявок
+    if (count === 0 && badge) {
+        badge.remove();
+        return;
+    }
+    
+    // Создаем бейдж если его нет
+    if (count > 0 && !badge) {
+        badge = document.createElement('span');
+        badge.className = 'notification-badge';
+        friendsNavLink.style.position = 'relative';
+        friendsNavLink.appendChild(badge);
+    }
+    
+    // Обновляем количество
+    if (count > 0 && badge) {
+        badge.textContent = count > 9 ? '9+' : count;
+    }
+}
+
+// Поиск пользователей
+async function searchFriends() {
+    const searchTerm = document.getElementById('friend-search').value.trim();
+    const resultsContainer = document.getElementById('search-results');
+    
+    if (!searchTerm) {
+        showNotification('Введите имя или username для поиска', 'warning');
+        return;
+    }
+    
+    if (!currentUser) {
+        showNotification('Войдите в систему для поиска друзей', 'error');
+        showLoginModal();
+        return;
+    }
+    
+    try {
+        showNotification('Поиск...', 'warning');
+        resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-spinner fa-spin"></i><p>Поиск...</p></div>';
+        
+        // Ищем пользователей по имени или username
+        const usersSnapshot = await db.ref('users').once('value');
+        const allUsers = usersSnapshot.val() || {};
+        
+        const results = [];
+        
+        Object.keys(allUsers).forEach(uid => {
+            // Пропускаем текущего пользователя
+            if (uid === currentUser.uid) return;
+            
+            const user = allUsers[uid];
+            const userName = user.name || '';
+            const userUsername = user.username || '';
+            const userEmail = user.email || '';
+            
+            // Поиск по имени, username или email
+            const searchLower = searchTerm.toLowerCase();
+            if (userName.toLowerCase().includes(searchLower) || 
+                userUsername.toLowerCase().includes(searchLower) ||
+                userEmail.toLowerCase().includes(searchLower)) {
+                
+                results.push({
+                    uid: uid,
+                    ...user
+                });
+            }
+        });
+        
+        displaySearchResults(results);
+        
+    } catch (error) {
+        console.error('Ошибка поиска:', error);
+        showNotification('Ошибка поиска', 'error');
+        resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><p>Ошибка поиска</p></div>';
+    }
+}
+
+// Отображение результатов поиска
+function displaySearchResults(results) {
+    const resultsContainer = document.getElementById('search-results');
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>Пользователи не найдены</p></div>';
+        return;
+    }
+    
+    let html = '';
+    
+    results.forEach(user => {
+        const isFriend = friendsData[user.uid];
+        const hasIncomingRequest = friendRequests[user.uid];
+        
+        let actionButton = '';
+        
+        if (isFriend) {
+            actionButton = `
+                <button class="btn-secondary" onclick="viewFriendProfile('${user.uid}')">
+                    <i class="fas fa-user"></i> Профиль
+                </button>
+                <button class="btn-primary" onclick="viewUserWall('${user.uid}')">
+                    <i class="fas fa-stream"></i> Стена
+                </button>
+            `;
+        } else if (hasIncomingRequest) {
+            actionButton = `<div class="friendship-status status-pending">Заявка получена</div>`;
+        } else {
+            actionButton = `<button class="btn-primary" onclick="sendFriendRequest('${user.uid}')">
+                <i class="fas fa-user-plus"></i> Добавить
+            </button>`;
+        }
+        
+        html += `
+            <div class="search-result-item">
+                <div class="search-result-info">
+                    <div class="search-result-avatar">
+                        ${user.avatar || (user.name ? user.name.charAt(0).toUpperCase() : 'U')}
+                    </div>
+                    <div class="search-result-details">
+                        <h4>${user.name || 'Пользователь'}</h4>
+                        ${user.username ? `<div class="search-result-username">@${user.username}</div>` : ''}
+                    </div>
+                </div>
+                <div class="search-result-actions">
+                    ${actionButton}
+                    <button class="btn-secondary" onclick="viewFriendProfile('${user.uid}')">
+                        <i class="fas fa-eye"></i> Профиль
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsContainer.innerHTML = html;
+}
+
+// Отправка заявки в друзья
+async function sendFriendRequest(friendUid) {
+    if (!currentUser || !db) {
+        showNotification('Войдите в систему', 'error');
+        return;
+    }
+    
+    try {
+        // Создаем заявку в друзья
+        const requestData = {
+            from: currentUser.uid,
+            fromName: currentUser.name,
+            fromUsername: currentUser.username,
+            fromAvatar: currentUser.avatar,
+            timestamp: new Date().toISOString(),
+            status: 'pending'
+        };
+        
+        // Сохраняем заявку у получателя
+        await db.ref('friendRequests/' + friendUid + '/' + currentUser.uid).set(requestData);
+        
+        showNotification('Заявка в друзья отправлена!', 'success');
+        
+        // Обновляем результаты поиска
+        searchFriends();
+        
+    } catch (error) {
+        console.error('Ошибка отправки заявки:', error);
+        showNotification('Ошибка отправки заявки', 'error');
+    }
+}
+
+// Обновление списка друзей
+function updateFriendsList() {
+    const friendsList = document.getElementById('friends-list');
+    const friendsCount = document.getElementById('friends-count');
+    const noFriends = document.getElementById('no-friends');
+    
+    const friendUids = Object.keys(friendsData);
+    friendsCount.textContent = `(${friendUids.length})`;
+    
+    if (friendUids.length === 0) {
+        noFriends.style.display = 'block';
+        friendsList.innerHTML = '';
+        friendsList.appendChild(noFriends);
+        return;
+    }
+    
+    noFriends.style.display = 'none';
+    
+    // Загружаем данные друзей
+    loadFriendsDetails(friendUids).then(friends => {
+        let html = '';
+        
+        friends.forEach(friend => {
+            if (!friend) return;
+            
+            html += `
+                <div class="friend-item">
+                    <div class="friend-avatar" onclick="viewFriendProfile('${friend.uid}')">
+                        ${friend.avatar || (friend.name ? friend.name.charAt(0).toUpperCase() : 'U')}
+                    </div>
+                    <div class="friend-name">${friend.name || 'Пользователь'}</div>
+                    ${friend.username ? `<div class="friend-username">@${friend.username}</div>` : ''}
+                    <div class="friend-actions">
+                        <button class="friend-action-btn btn-view" onclick="viewFriendProfile('${friend.uid}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="friend-action-btn btn-primary" onclick="viewUserWall('${friend.uid}')">
+                            <i class="fas fa-stream"></i>
+                        </button>
+                        <button class="friend-action-btn btn-remove" onclick="removeFriend('${friend.uid}')">
+                            <i class="fas fa-user-minus"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        friendsList.innerHTML = html;
+    });
+}
+
+// Загрузка деталей друзей
+async function loadFriendsDetails(friendUids) {
+    const friends = [];
+    
+    for (const uid of friendUids) {
+        try {
+            const snapshot = await db.ref('users/' + uid).once('value');
+            const userData = snapshot.val();
+            if (userData) {
+                friends.push({
+                    uid: uid,
+                    ...userData
+                });
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки данных друга:', error);
+        }
+    }
+    
+    return friends;
+}
+
+// Принятие заявки в друзья
+async function acceptFriendRequest(fromUid) {
+    try {
+        const request = friendRequests[fromUid];
+        
+        // Добавляем в друзья у текущего пользователя
+        await db.ref('friends/' + currentUser.uid + '/' + fromUid).set({
+            since: new Date().toISOString(),
+            ...request
+        });
+        
+        // Добавляем в друзья у отправителя
+        await db.ref('friends/' + fromUid + '/' + currentUser.uid).set({
+            since: new Date().toISOString(),
+            name: currentUser.name,
+            username: currentUser.username,
+            avatar: currentUser.avatar
+        });
+        
+        // Удаляем заявку
+        await db.ref('friendRequests/' + currentUser.uid + '/' + fromUid).remove();
+        
+        showNotification('Заявка принята!', 'success');
+        
+    } catch (error) {
+        console.error('Ошибка принятия заявки:', error);
+        showNotification('Ошибка принятия заявки', 'error');
+    }
+}
+
+// Отклонение заявки в друзья
+async function declineFriendRequest(fromUid) {
+    try {
+        await db.ref('friendRequests/' + currentUser.uid + '/' + fromUid).remove();
+        showNotification('Заявка отклонена', 'success');
+        
+    } catch (error) {
+        console.error('Ошибка отклонения заявки:', error);
+        showNotification('Ошибка отклонения заявки', 'error');
+    }
+}
+
+// Удаление друга
+async function removeFriend(friendUid) {
+    if (!confirm('Вы уверены, что хотите удалить этого пользователя из друзей?')) {
+        return;
+    }
+    
+    try {
+        // Удаляем у текущего пользователя
+        await db.ref('friends/' + currentUser.uid + '/' + friendUid).remove();
+        
+        // Удаляем у друга
+        await db.ref('friends/' + friendUid + '/' + currentUser.uid).remove();
+        
+        showNotification('Пользователь удален из друзей', 'success');
+        
+    } catch (error) {
+        console.error('Ошибка удаления друга:', error);
+        showNotification('Ошибка удаления друга', 'error');
+    }
+}
+
+// Просмотр профиля друга
+async function viewFriendProfile(friendUid) {
+    try {
+        showNotification('Загрузка профиля...', 'warning');
+        
+        const snapshot = await db.ref('users/' + friendUid).once('value');
+        const friendData = snapshot.val();
+        
+        if (!friendData) {
+            showNotification('Профиль не найден', 'error');
+            return;
+        }
+        
+        await showFriendProfile(friendUid, friendData);
+        showNotification('Профиль загружен', 'success');
+        
+    } catch (error) {
+        console.error('Ошибка загрузки профиля:', error);
+        showNotification('Ошибка загрузки профиля', 'error');
+    }
+}
+
+// Функция для получения реальной статистики друга
+async function getFriendRealStats(friendUid) {
+    try {
+        // Получаем количество друзей друга
+        const friendsSnapshot = await db.ref('friends/' + friendUid).once('value');
+        const friendFriends = friendsSnapshot.val() || {};
+        const friendsCount = Object.keys(friendFriends).length;
+        
+        // Получаем количество огоньков друга
+        const userSnapshot = await db.ref('users/' + friendUid).once('value');
+        const userData = userSnapshot.val() || {};
+        const totalFires = userData.stats?.totalFires || 0;
+        
+        console.log(`Статистика друга ${friendUid}:`, { friendsCount, totalFires });
+        
+        return {
+            friendsCount: friendsCount,
+            totalFires: totalFires
+        };
+        
+    } catch (error) {
+        console.error('Ошибка загрузки статистики друга:', error);
+        return {
+            friendsCount: 0,
+            totalFires: 0
+        };
+    }
+}
+
+// Отображение профиля друга с исправленной статистикой
+async function showFriendProfile(friendUid, friendData) {
+    const container = document.getElementById('friend-profile-container');
+    const isFriend = friendsData[friendUid];
+    
+    let friendshipStatus = '';
+    let actionButtons = '';
+    
+    if (isFriend) {
+        friendshipStatus = '<div class="friendship-status status-friends">Друг</div>';
+        actionButtons = `
+            <button class="btn-primary" onclick="viewUserWall('${friendUid}')">
+                <i class="fas fa-stream"></i> Посмотреть стену
+            </button>
+            <button class="btn-danger" onclick="removeFriend('${friendUid}')">
+                <i class="fas fa-user-minus"></i> Удалить из друзей
+            </button>
+        `;
+    } else if (friendRequests[friendUid]) {
+        friendshipStatus = '<div class="friendship-status status-pending">Заявка получена</div>';
+        actionButtons = `
+            <button class="btn-accept" onclick="acceptFriendRequest('${friendUid}')">
+                <i class="fas fa-check"></i> Принять заявку
+            </button>
+            <button class="btn-decline" onclick="declineFriendRequest('${friendUid}')">
+                <i class="fas fa-times"></i> Отклонить
+            </button>
+        `;
+    } else {
+        friendshipStatus = '<div class="friendship-status status-not-friends">Не в друзьях</div>';
+        actionButtons = `
+            <button class="btn-primary" onclick="sendFriendRequest('${friendUid}')">
+                <i class="fas fa-user-plus"></i> Добавить в друзья
+            </button>
+            <button class="btn-secondary" onclick="viewUserWall('${friendUid}')">
+                <i class="fas fa-stream"></i> Посмотреть стену
+            </button>
+        `;
+    }
+    
+    // ЗАГРУЖАЕМ РЕАЛЬНЫЕ ДАННЫЕ ДРУГА
+    const friendStats = await getFriendRealStats(friendUid);
+    
+    const html = `
+        <div class="friend-profile-card card">
+            ${friendshipStatus}
+            <div class="friend-profile-avatar">
+                ${friendData.avatar || (friendData.name ? friendData.name.charAt(0).toUpperCase() : 'U')}
+            </div>
+            <h2 class="friend-profile-name">${friendData.name || 'Пользователь'}</h2>
+            ${friendData.username ? `<div class="friend-profile-username">@${friendData.username}</div>` : ''}
+            
+            <div class="friend-profile-stats">
+                <div class="friend-stat">
+                    <span class="friend-stat-value">${friendStats.totalFires}</span>
+                    <span class="friend-stat-label">Огоньков получено</span>
+                </div>
+                <div class="friend-stat">
+                    <span class="friend-stat-value">${friendStats.friendsCount}</span>
+                    <span class="friend-stat-label">Друзей</span>
+                </div>
+            </div>
+            
+            <div class="friend-profile-actions">
+                ${actionButtons}
+                <button class="btn-secondary" onclick="showSection('friends')">
+                    <i class="fas fa-arrow-left"></i> Назад к друзьям
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    showSection('friend-profile');
+}
+
+// Функция для пересчета и обновления огоньков пользователя
+async function recalculateUserFires(userId) {
+    if (!db) return 0;
+    
+    try {
+        // Считаем огоньки из статей
+        const articlesSnapshot = await db.ref('articles').once('value');
+        const articles = articlesSnapshot.val() || {};
+        
+        let articlesFires = 0;
+        Object.values(articles).forEach(article => {
+            if (article.authorId === userId) {
+                articlesFires += article.fires || 0;
+            }
+        });
+        
+        // Считаем огоньки из постов на стене
+        const wallSnapshot = await db.ref('wall/' + userId).once('value');
+        const wallPosts = wallSnapshot.val() || {};
+        
+        let wallFires = 0;
+        Object.values(wallPosts).forEach(post => {
+            wallFires += post.fires || 0;
+        });
+        
+        const totalFires = articlesFires + wallFires;
+        
+        // Обновляем в базе
+        await db.ref('users/' + userId + '/stats/totalFires').set(totalFires);
+        
+        console.log(`Пересчитаны огоньки для ${userId}: ${totalFires} (статьи: ${articlesFires}, стена: ${wallFires})`);
+        
+        return totalFires;
+        
+    } catch (error) {
+        console.error('Ошибка пересчета огоньков:', error);
+        return 0;
+    }
+}
+
+// Функция для исправления статистики всех пользователей
+async function fixAllUsersStats() {
+    if (!db || !currentUser) return;
+    
+    try {
+        showNotification('Исправление статистики...', 'warning');
+        
+        const usersSnapshot = await db.ref('users').once('value');
+        const users = usersSnapshot.val() || {};
+        
+        let fixedCount = 0;
+        
+        for (const userId of Object.keys(users)) {
+            const totalFires = await recalculateUserFires(userId);
+            console.log(`Исправлена статистика для ${userId}: ${totalFires} огоньков`);
+            fixedCount++;
+        }
+        
+        showNotification(`Статистика исправлена для ${fixedCount} пользователей`, 'success');
+        
+    } catch (error) {
+        console.error('Ошибка исправления статистики:', error);
+        showNotification('Ошибка исправления статистики', 'error');
+    }
+}
+
+// Просмотр стены пользователя
+function viewUserWall(userId) {
+    showWallSection(userId);
+    showSection('profile');
+}
+
+// ==================== СИСТЕМА СТЕНЫ ====================
 
 function initWallSystem() {
     console.log('Инициализация системы стены...');
@@ -244,7 +852,7 @@ function showWallSection(userId = null) {
     }
 }
 
-// ОПТИМИЗИРОВАННАЯ загрузка постов стены
+// Загрузка постов стены
 function loadWallPosts(userId) {
     if (!db || !userId) {
         console.error('Firebase не инициализирован или отсутствует userId');
@@ -320,7 +928,7 @@ function retryLoadWallPosts() {
     }
 }
 
-// ОПТИМИЗИРОВАННОЕ отображение постов стены
+// Отображение постов стены
 async function displayWallPosts(posts, userId) {
     const postsContainer = document.getElementById('wall-posts');
     if (!postsContainer) return;
@@ -373,12 +981,12 @@ async function displayWallPosts(posts, userId) {
     // Сортируем посты по времени (новые сверху) и ограничиваем количество
     const sortedPosts = Object.entries(posts)
         .sort(([,a], [,b]) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice(0, 100); // Ограничиваем 100 постами
+        .slice(0, 100);
     
     // Предзагружаем данные об огоньках пользователя
     const userFires = getUserFires();
     
-    // Создаем HTML для постов - ОПТИМИЗИРОВАННАЯ ВЕРСИЯ
+    // Создаем HTML для постов
     let postsHTML = '';
     let postCount = 0;
     
@@ -398,7 +1006,7 @@ async function displayWallPosts(posts, userId) {
     attachWallPostEventListeners();
 }
 
-// Создание HTML для поста стены (ОПТИМИЗИРОВАННОЕ)
+// Создание HTML для поста стены
 function createWallPostHTML(postId, post, userId, fireCount, isFired, canDelete) {
     const authorName = escapeHtml(post.authorName || 'Пользователь');
     const content = escapeHtml(post.content || '').replace(/\n/g, '<br>');
@@ -484,7 +1092,7 @@ function attachWallPostEventListeners() {
     });
 }
 
-// Добавление поста на стену (ОПТИМИЗИРОВАННОЕ)
+// Добавление поста на стену
 async function addWallPost() {
     const contentInput = document.getElementById('wall-post-content');
     const content = contentInput?.value.trim();
@@ -622,12 +1230,8 @@ async function toggleWallFire(postId, userId) {
         // Очищаем кэш для обновления данных
         wallPostsCache.delete(`wall_${userId}`);
         
-        // Обновляем общее количество огоньков пользователя
-        if (userId === currentUser.uid) {
-            updateUserFiresCount();
-        } else {
-            updateUserFiresCount(userId);
-        }
+        // ОБНОВЛЯЕМ ОБЩЕЕ КОЛИЧЕСТВО ОГОНЬКОВ ПОЛЬЗОВАТЕЛЯ
+        await recalculateUserFires(userId);
         
     } catch (error) {
         console.error('Ошибка обновления огонька:', error);
@@ -635,44 +1239,7 @@ async function toggleWallFire(postId, userId) {
     }
 }
 
-// Обновление общего количества огоньков пользователя
-async function updateUserFiresCount(userId = null) {
-    const targetUserId = userId || currentUser.uid;
-    if (!db) return;
-    
-    try {
-        // Считаем общее количество огоньков на всех постах пользователя
-        const snapshot = await db.ref('wall/' + targetUserId).once('value');
-        const posts = snapshot.val() || {};
-        
-        let totalFires = 0;
-        Object.values(posts).forEach(post => {
-            totalFires += post.fires || 0;
-        });
-        
-        // Обновляем в профиле пользователя
-        await db.ref('users/' + targetUserId + '/stats/totalFires').set(totalFires);
-        
-        // Обновляем локальные данные, если это текущий пользователь
-        if (targetUserId === currentUser?.uid) {
-            if (currentUser.stats) {
-                currentUser.stats.totalFires = totalFires;
-            } else {
-                currentUser.stats = { totalFires: totalFires };
-            }
-            
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            // Обновляем отображение в профиле
-            updateProfilePageDisplay();
-        }
-        
-    } catch (error) {
-        console.error('Ошибка обновления счетчика огоньков:', error);
-    }
-}
-
-// ==================== СИСТЕМА ПРОФИЛЯ (ОПТИМИЗИРОВАННАЯ) ====================
+// ==================== СИСТЕМА ПРОФИЛЯ ====================
 
 function initProfileSystem() {
     console.log('Инициализация системы профиля...');
@@ -919,620 +1486,6 @@ async function saveProfileChanges() {
     }
 }
 
-function showLoginModal() {
-    closeAllModals();
-    document.getElementById('auth-modal').classList.remove('hidden');
-}
-
-function showRegisterModal() {
-    closeAllModals();
-    document.getElementById('register-modal').classList.remove('hidden');
-}
-
-function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.add('hidden');
-    });
-}
-
-// Регистрация пользователя
-async function registerUser(name, email, password) {
-    try {
-        showNotification('Регистрация...', 'warning');
-        
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        // Выбираем случайный emoji аватар
-        const randomAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
-        
-        // Сохраняем данные пользователя в базу
-        await db.ref('users/' + user.uid).set({
-            name: name,
-            username: null,
-            email: email,
-            avatar: randomAvatar, // Случайный emoji аватар
-            createdAt: new Date().toISOString(),
-            stats: {
-                totalFires: 0
-            }
-        });
-        
-        showNotification(`Регистрация успешна! Ваш аватар: ${randomAvatar}`, 'success');
-        closeAllModals();
-        
-    } catch (error) {
-        console.error('Ошибка регистрации:', error);
-        showNotification(getAuthErrorMessage(error), 'error');
-    }
-}
-
-// Проверка занятости username
-async function isUsernameTaken(username) {
-    try {
-        if (!username) return false;
-        
-        const snapshot = await db.ref('usernames/' + username).once('value');
-        const exists = snapshot.exists();
-        console.log(`Username "${username}" ${exists ? 'занят' : 'свободен'}`);
-        return exists;
-    } catch (error) {
-        console.error('Ошибка проверки username:', error);
-        throw error;
-    }
-}
-
-// Валидация username
-function isValidUsername(username) {
-    if (!username || username.length < 3 || username.length > 20) {
-        return false;
-    }
-    
-    // Разрешаем только латинские буквы, цифры и нижнее подчеркивание
-    const usernameRegex = /^[a-zA-Z0-9_]+$/;
-    return usernameRegex.test(username);
-}
-
-// Вход пользователя
-async function loginUser(email, password) {
-    try {
-        showNotification('Вход...', 'warning');
-        
-        await auth.signInWithEmailAndPassword(email, password);
-        showNotification('Вход успешен!', 'success');
-        closeAllModals();
-        
-    } catch (error) {
-        console.error('Ошибка входа:', error);
-        showNotification(getAuthErrorMessage(error), 'error');
-    }
-}
-
-// Выход пользователя
-async function logoutUser() {
-    try {
-        await auth.signOut();
-        showNotification('Вы вышли из системы', 'success');
-        // Возвращаем на главную страницу
-        showSection('home');
-        setActiveNavLink(document.querySelector('.nav-link[href="#home"]'));
-    } catch (error) {
-        console.error('Ошибка выхода:', error);
-        showNotification('Ошибка при выходе', 'error');
-    }
-}
-
-// Обработка ошибок аутентификации
-function getAuthErrorMessage(error) {
-    const errorCode = error.code;
-    switch (errorCode) {
-        case 'auth/email-already-in-use':
-            return 'Этот email уже используется';
-        case 'auth/invalid-email':
-            return 'Неверный формат email';
-        case 'auth/weak-password':
-            return 'Пароль слишком слабый';
-        case 'auth/user-not-found':
-            return 'Пользователь не найден';
-        case 'auth/wrong-password':
-            return 'Неверный пароль';
-        default:
-            return 'Произошла ошибка. Попробуйте еще раз';
-    }
-}
-
-// Уведомления
-let notificationTimeout;
-function showNotification(message, type = 'info') {
-    // Удаляем существующие уведомления
-    document.querySelectorAll('.notification').forEach(notification => {
-        notification.remove();
-    });
-    
-    // Очищаем предыдущий таймаут
-    if (notificationTimeout) {
-        clearTimeout(notificationTimeout);
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    notificationTimeout = setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-// ==================== СИСТЕМА ДРУЗЕЙ ====================
-
-function initFriendsSystem() {
-    console.log('Инициализация системы друзей...');
-    
-    // Поиск друзей
-    document.getElementById('search-friends-btn').addEventListener('click', searchFriends);
-    document.getElementById('friend-search').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchFriends();
-        }
-    });
-    
-    // Загружаем данные друзей при входе пользователя
-    if (currentUser) {
-        loadFriendsData();
-    }
-}
-
-// Загрузка данных друзей
-function loadFriendsData() {
-    if (!currentUser || !db) return;
-    
-    console.log('Загрузка данных друзей для пользователя:', currentUser.uid);
-    
-    // Загружаем список друзей
-    db.ref('friends/' + currentUser.uid).on('value', (snapshot) => {
-        friendsData = snapshot.val() || {};
-        updateFriendsList();
-        console.log('Данные друзей загружены:', friendsData);
-    });
-    
-    // Загружаем входящие заявки
-    db.ref('friendRequests/' + currentUser.uid).on('value', (snapshot) => {
-        friendRequests = snapshot.val() || {};
-        updateFriendRequests();
-        console.log('Заявки в друзья загружены:', friendRequests);
-    });
-}
-
-// Поиск пользователей
-async function searchFriends() {
-    const searchTerm = document.getElementById('friend-search').value.trim();
-    const resultsContainer = document.getElementById('search-results');
-    
-    if (!searchTerm) {
-        showNotification('Введите имя или username для поиска', 'warning');
-        return;
-    }
-    
-    if (!currentUser) {
-        showNotification('Войдите в систему для поиска друзей', 'error');
-        showLoginModal();
-        return;
-    }
-    
-    try {
-        showNotification('Поиск...', 'warning');
-        resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-spinner fa-spin"></i><p>Поиск...</p></div>';
-        
-        // Ищем пользователей по имени или username
-        const usersSnapshot = await db.ref('users').once('value');
-        const allUsers = usersSnapshot.val() || {};
-        
-        const results = [];
-        
-        Object.keys(allUsers).forEach(uid => {
-            // Пропускаем текущего пользователя
-            if (uid === currentUser.uid) return;
-            
-            const user = allUsers[uid];
-            const userName = user.name || '';
-            const userUsername = user.username || '';
-            const userEmail = user.email || '';
-            
-            // Поиск по имени, username или email
-            const searchLower = searchTerm.toLowerCase();
-            if (userName.toLowerCase().includes(searchLower) || 
-                userUsername.toLowerCase().includes(searchLower) ||
-                userEmail.toLowerCase().includes(searchLower)) {
-                
-                results.push({
-                    uid: uid,
-                    ...user
-                });
-            }
-        });
-        
-        displaySearchResults(results);
-        
-    } catch (error) {
-        console.error('Ошибка поиска:', error);
-        showNotification('Ошибка поиска', 'error');
-        resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><p>Ошибка поиска</p></div>';
-    }
-}
-
-// Отображение результатов поиска
-function displaySearchResults(results) {
-    const resultsContainer = document.getElementById('search-results');
-    
-    if (results.length === 0) {
-        resultsContainer.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>Пользователи не найдены</p></div>';
-        return;
-    }
-    
-    let html = '';
-    
-    results.forEach(user => {
-        const isFriend = friendsData[user.uid];
-        const hasIncomingRequest = friendRequests[user.uid];
-        
-        let actionButton = '';
-        
-        if (isFriend) {
-            actionButton = `
-                <button class="btn-secondary" onclick="viewFriendProfile('${user.uid}')">
-                    <i class="fas fa-user"></i> Профиль
-                </button>
-                <button class="btn-primary" onclick="viewUserWall('${user.uid}')">
-                    <i class="fas fa-stream"></i> Стена
-                </button>
-            `;
-        } else if (hasIncomingRequest) {
-            actionButton = `<div class="friendship-status status-pending">Заявка получена</div>`;
-        } else {
-            actionButton = `<button class="btn-primary" onclick="sendFriendRequest('${user.uid}')">
-                <i class="fas fa-user-plus"></i> Добавить
-            </button>`;
-        }
-        
-        html += `
-            <div class="search-result-item">
-                <div class="search-result-info">
-                    <div class="search-result-avatar">
-                        ${user.avatar || (user.name ? user.name.charAt(0).toUpperCase() : 'U')}
-                    </div>
-                    <div class="search-result-details">
-                        <h4>${user.name || 'Пользователь'}</h4>
-                        ${user.username ? `<div class="search-result-username">@${user.username}</div>` : ''}
-                    </div>
-                </div>
-                <div class="search-result-actions">
-                    ${actionButton}
-                    <button class="btn-secondary" onclick="viewFriendProfile('${user.uid}')">
-                        <i class="fas fa-eye"></i> Профиль
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    
-    resultsContainer.innerHTML = html;
-}
-
-// Просмотр стены пользователя
-function viewUserWall(userId) {
-    showWallSection(userId);
-    showSection('profile');
-}
-
-// Отправка заявки в друзья
-async function sendFriendRequest(friendUid) {
-    if (!currentUser || !db) {
-        showNotification('Войдите в систему', 'error');
-        return;
-    }
-    
-    try {
-        // Создаем заявку в друзья
-        const requestData = {
-            from: currentUser.uid,
-            fromName: currentUser.name,
-            fromUsername: currentUser.username,
-            fromAvatar: currentUser.avatar,
-            timestamp: new Date().toISOString(),
-            status: 'pending'
-        };
-        
-        // Сохраняем заявку у получателя
-        await db.ref('friendRequests/' + friendUid + '/' + currentUser.uid).set(requestData);
-        
-        showNotification('Заявка в друзья отправлена!', 'success');
-        
-        // Обновляем результаты поиска
-        searchFriends();
-        
-    } catch (error) {
-        console.error('Ошибка отправки заявки:', error);
-        showNotification('Ошибка отправки заявки', 'error');
-    }
-}
-
-// Обновление списка друзей
-function updateFriendsList() {
-    const friendsList = document.getElementById('friends-list');
-    const friendsCount = document.getElementById('friends-count');
-    const noFriends = document.getElementById('no-friends');
-    
-    const friendUids = Object.keys(friendsData);
-    friendsCount.textContent = `(${friendUids.length})`;
-    
-    if (friendUids.length === 0) {
-        noFriends.style.display = 'block';
-        friendsList.innerHTML = '';
-        friendsList.appendChild(noFriends);
-        return;
-    }
-    
-    noFriends.style.display = 'none';
-    
-    // Загружаем данные друзей
-    loadFriendsDetails(friendUids).then(friends => {
-        let html = '';
-        
-        friends.forEach(friend => {
-            if (!friend) return;
-            
-            html += `
-                <div class="friend-item">
-                    <div class="friend-avatar" onclick="viewFriendProfile('${friend.uid}')">
-                        ${friend.avatar || (friend.name ? friend.name.charAt(0).toUpperCase() : 'U')}
-                    </div>
-                    <div class="friend-name">${friend.name || 'Пользователь'}</div>
-                    ${friend.username ? `<div class="friend-username">@${friend.username}</div>` : ''}
-                    <div class="friend-actions">
-                        <button class="friend-action-btn btn-view" onclick="viewFriendProfile('${friend.uid}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="friend-action-btn btn-primary" onclick="viewUserWall('${friend.uid}')">
-                            <i class="fas fa-stream"></i>
-                        </button>
-                        <button class="friend-action-btn btn-remove" onclick="removeFriend('${friend.uid}')">
-                            <i class="fas fa-user-minus"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        friendsList.innerHTML = html;
-    });
-}
-
-// Загрузка деталей друзей
-async function loadFriendsDetails(friendUids) {
-    const friends = [];
-    
-    for (const uid of friendUids) {
-        try {
-            const snapshot = await db.ref('users/' + uid).once('value');
-            const userData = snapshot.val();
-            if (userData) {
-                friends.push({
-                    uid: uid,
-                    ...userData
-                });
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки данных друга:', error);
-        }
-    }
-    
-    return friends;
-}
-
-// Обновление списка заявок
-function updateFriendRequests() {
-    const requestsList = document.getElementById('friend-requests-list');
-    const requestsCount = document.getElementById('requests-count');
-    const requestsSection = document.getElementById('friend-requests-section');
-    
-    const requestUids = Object.keys(friendRequests);
-    requestsCount.textContent = `(${requestUids.length})`;
-    
-    if (requestUids.length === 0) {
-        requestsList.innerHTML = '<div class="no-results"><i class="fas fa-inbox"></i><p>Нет входящих заявок</p></div>';
-        return;
-    }
-    
-    let html = '';
-    
-    requestUids.forEach(uid => {
-        const request = friendRequests[uid];
-        
-        html += `
-            <div class="request-item">
-                <div class="request-info">
-                    <div class="request-avatar">
-                        ${request.fromAvatar || (request.fromName ? request.fromName.charAt(0).toUpperCase() : 'U')}
-                    </div>
-                    <div class="request-details">
-                        <h4>${request.fromName || 'Пользователь'}</h4>
-                        ${request.fromUsername ? `<div class="request-username">@${request.fromUsername}</div>` : ''}
-                        <div class="request-date">${new Date(request.timestamp).toLocaleDateString('ru-RU')}</div>
-                    </div>
-                </div>
-                <div class="request-actions">
-                    <button class="btn-accept" onclick="acceptFriendRequest('${uid}')">
-                        <i class="fas fa-check"></i> Принять
-                    </button>
-                    <button class="btn-decline" onclick="declineFriendRequest('${uid}')">
-                        <i class="fas fa-times"></i> Отклонить
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    
-    requestsList.innerHTML = html;
-}
-
-// Принятие заявки в друзья
-async function acceptFriendRequest(fromUid) {
-    try {
-        const request = friendRequests[fromUid];
-        
-        // Добавляем в друзья у текущего пользователя
-        await db.ref('friends/' + currentUser.uid + '/' + fromUid).set({
-            since: new Date().toISOString(),
-            ...request
-        });
-        
-        // Добавляем в друзья у отправителя
-        await db.ref('friends/' + fromUid + '/' + currentUser.uid).set({
-            since: new Date().toISOString(),
-            name: currentUser.name,
-            username: currentUser.username,
-            avatar: currentUser.avatar
-        });
-        
-        // Удаляем заявку
-        await db.ref('friendRequests/' + currentUser.uid + '/' + fromUid).remove();
-        
-        showNotification('Заявка принята!', 'success');
-        
-    } catch (error) {
-        console.error('Ошибка принятия заявки:', error);
-        showNotification('Ошибка принятия заявки', 'error');
-    }
-}
-
-// Отклонение заявки в друзья
-async function declineFriendRequest(fromUid) {
-    try {
-        await db.ref('friendRequests/' + currentUser.uid + '/' + fromUid).remove();
-        showNotification('Заявка отклонена', 'success');
-    } catch (error) {
-        console.error('Ошибка отклонения заявки:', error);
-        showNotification('Ошибка отклонения заявки', 'error');
-    }
-}
-
-// Удаление друга
-async function removeFriend(friendUid) {
-    if (!confirm('Вы уверены, что хотите удалить этого пользователя из друзей?')) {
-        return;
-    }
-    
-    try {
-        // Удаляем у текущего пользователя
-        await db.ref('friends/' + currentUser.uid + '/' + friendUid).remove();
-        
-        // Удаляем у друга
-        await db.ref('friends/' + friendUid + '/' + currentUser.uid).remove();
-        
-        showNotification('Пользователь удален из друзей', 'success');
-        
-    } catch (error) {
-        console.error('Ошибка удаления друга:', error);
-        showNotification('Ошибка удаления друга', 'error');
-    }
-}
-
-// Просмотр профиля друга
-async function viewFriendProfile(friendUid) {
-    try {
-        const snapshot = await db.ref('users/' + friendUid).once('value');
-        const friendData = snapshot.val();
-        
-        if (!friendData) {
-            showNotification('Профиль не найден', 'error');
-            return;
-        }
-        
-        showFriendProfile(friendUid, friendData);
-        
-    } catch (error) {
-        console.error('Ошибка загрузки профиля:', error);
-        showNotification('Ошибка загрузки профиля', 'error');
-    }
-}
-
-// Отображение профиля друга
-function showFriendProfile(friendUid, friendData) {
-    const container = document.getElementById('friend-profile-container');
-    const isFriend = friendsData[friendUid];
-    
-    let friendshipStatus = '';
-    let actionButtons = '';
-    
-    if (isFriend) {
-        friendshipStatus = '<div class="friendship-status status-friends">Друг</div>';
-        actionButtons = `
-            <button class="btn-primary" onclick="viewUserWall('${friendUid}')">
-                <i class="fas fa-stream"></i> Посмотреть стену
-            </button>
-            <button class="btn-danger" onclick="removeFriend('${friendUid}')">
-                <i class="fas fa-user-minus"></i> Удалить из друзей
-            </button>
-        `;
-    } else if (friendRequests[friendUid]) {
-        friendshipStatus = '<div class="friendship-status status-pending">Заявка получена</div>';
-        actionButtons = `
-            <button class="btn-accept" onclick="acceptFriendRequest('${friendUid}')">
-                <i class="fas fa-check"></i> Принять заявку
-            </button>
-            <button class="btn-decline" onclick="declineFriendRequest('${friendUid}')">
-                <i class="fas fa-times"></i> Отклонить
-            </button>
-        `;
-    } else {
-        friendshipStatus = '<div class="friendship-status status-not-friends">Не в друзьях</div>';
-        actionButtons = `
-            <button class="btn-primary" onclick="sendFriendRequest('${friendUid}')">
-                <i class="fas fa-user-plus"></i> Добавить в друзья
-            </button>
-            <button class="btn-secondary" onclick="viewUserWall('${friendUid}')">
-                <i class="fas fa-stream"></i> Посмотреть стену
-            </button>
-        `;
-    }
-    
-    const html = `
-        <div class="friend-profile-card card">
-            ${friendshipStatus}
-            <div class="friend-profile-avatar">
-                ${friendData.avatar || (friendData.name ? friendData.name.charAt(0).toUpperCase() : 'U')}
-            </div>
-            <h2 class="friend-profile-name">${friendData.name || 'Пользователь'}</h2>
-            ${friendData.username ? `<div class="friend-profile-username">@${friendData.username}</div>` : ''}
-            
-            <div class="friend-profile-stats">
-                <div class="friend-stat">
-                    <span class="friend-stat-value">${friendData.stats?.totalFires || 0}</span>
-                    <span class="friend-stat-label">Огоньков получено</span>
-                </div>
-                <div class="friend-stat">
-                    <span class="friend-stat-value">${Object.keys(friendsData).length}</span>
-                    <span class="friend-stat-label">Друзей</span>
-                </div>
-            </div>
-            
-            <div class="friend-profile-actions">
-                ${actionButtons}
-                <button class="btn-secondary" onclick="showSection('friends')">
-                    <i class="fas fa-arrow-left"></i> Назад к друзьям
-                </button>
-            </div>
-        </div>
-    `;
-    
-    container.innerHTML = html;
-    showSection('friend-profile');
-}
-
 // ==================== СИСТЕМА EMOJI АВАТАРОВ ====================
 
 function initAvatarSystem() {
@@ -1710,6 +1663,128 @@ function initAuthModals() {
         
         registerUser(name, email, password);
     });
+}
+
+function showLoginModal() {
+    closeAllModals();
+    document.getElementById('auth-modal').classList.remove('hidden');
+}
+
+function showRegisterModal() {
+    closeAllModals();
+    document.getElementById('register-modal').classList.remove('hidden');
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+    });
+}
+
+// Регистрация пользователя
+async function registerUser(name, email, password) {
+    try {
+        showNotification('Регистрация...', 'warning');
+        
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Выбираем случайный emoji аватар
+        const randomAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+        
+        // Сохраняем данные пользователя в базу
+        await db.ref('users/' + user.uid).set({
+            name: name,
+            username: null,
+            email: email,
+            avatar: randomAvatar,
+            createdAt: new Date().toISOString(),
+            stats: {
+                totalFires: 0
+            }
+        });
+        
+        showNotification(`Регистрация успешна! Ваш аватар: ${randomAvatar}`, 'success');
+        closeAllModals();
+        
+    } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        showNotification(getAuthErrorMessage(error), 'error');
+    }
+}
+
+// Проверка занятости username
+async function isUsernameTaken(username) {
+    try {
+        if (!username) return false;
+        
+        const snapshot = await db.ref('usernames/' + username).once('value');
+        const exists = snapshot.exists();
+        console.log(`Username "${username}" ${exists ? 'занят' : 'свободен'}`);
+        return exists;
+    } catch (error) {
+        console.error('Ошибка проверки username:', error);
+        throw error;
+    }
+}
+
+// Валидация username
+function isValidUsername(username) {
+    if (!username || username.length < 3 || username.length > 20) {
+        return false;
+    }
+    
+    // Разрешаем только латинские буквы, цифры и нижнее подчеркивание
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    return usernameRegex.test(username);
+}
+
+// Вход пользователя
+async function loginUser(email, password) {
+    try {
+        showNotification('Вход...', 'warning');
+        
+        await auth.signInWithEmailAndPassword(email, password);
+        showNotification('Вход успешен!', 'success');
+        closeAllModals();
+        
+    } catch (error) {
+        console.error('Ошибка входа:', error);
+        showNotification(getAuthErrorMessage(error), 'error');
+    }
+}
+
+// Выход пользователя
+async function logoutUser() {
+    try {
+        await auth.signOut();
+        showNotification('Вы вышли из системы', 'success');
+        // Возвращаем на главную страницу
+        showSection('home');
+        setActiveNavLink(document.querySelector('.nav-link[href="#home"]'));
+    } catch (error) {
+        console.error('Ошибка выхода:', error);
+        showNotification('Ошибка при выходе', 'error');
+    }
+}
+
+// Обработка ошибок аутентификации
+function getAuthErrorMessage(error) {
+    const errorCode = error.code;
+    switch (errorCode) {
+        case 'auth/email-already-in-use':
+            return 'Этот email уже используется';
+        case 'auth/invalid-email':
+            return 'Неверный формат email';
+        case 'auth/weak-password':
+            return 'Пароль слишком слабый';
+        case 'auth/user-not-found':
+            return 'Пользователь не найден';
+        case 'auth/wrong-password':
+            return 'Неверный пароль';
+        default:
+            return 'Произошла ошибка. Попробуйте еще раз';
+    }
 }
 
 // ==================== ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ====================
@@ -2146,7 +2221,7 @@ function updateFireButtonsForArticle(articleId, count) {
     }
 }
 
-// ==================== ЛОКАЛЬНОЕ ХРАНИЛИЩЕ (ЗАПАСНОЙ ВАРИАНТ) ====================
+// ==================== ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ====================
 
 function initWithLocalStorage() {
     console.log('Используем локальное хранилище...');
@@ -2384,5 +2459,30 @@ function checkMobileMenu() {
     }
 }
 
-console.log('Firebase script with OPTIMIZED wall system loaded successfully');
+// Уведомления
+let notificationTimeout;
+function showNotification(message, type = 'info') {
+    // Удаляем существующие уведомления
+    document.querySelectorAll('.notification').forEach(notification => {
+        notification.remove();
+    });
+    
+    // Очищаем предыдущий таймаут
+    if (notificationTimeout) {
+        clearTimeout(notificationTimeout);
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    notificationTimeout = setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
 
+console.log('Firebase script with FIXED FRIEND STATISTICS loaded successfully');
