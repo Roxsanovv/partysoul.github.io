@@ -552,7 +552,7 @@ footer {
     padding: 0 1.5rem;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    gap: 1rem;
 }
 
 .footer-section h3 {
@@ -2846,3 +2846,4 @@ a:hover {
         width: 100%;
     }
 }
+
