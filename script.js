@@ -1689,6 +1689,7 @@ async function registerUser(name, email, password) {
             username: null,
             email: email,
             avatar: randomAvatar,
+            balance: 1000,
             createdAt: new Date().toISOString(),
             stats: {
                 totalFires: 0
@@ -1697,6 +1698,9 @@ async function registerUser(name, email, password) {
         
         showNotification(`Регистрация успешна! Ваш аватар: ${randomAvatar}`, 'success');
         closeAllModals();
+
+        // В функции registerUser после создания пользователя добавьте:
+        await db.ref('users/' + user.uid + '/balance').set(1000);
         
     } catch (error) {
         console.error('Ошибка регистрации:', error);
@@ -2902,16 +2906,44 @@ function showBuyConfirmationModal(item) {
 async function confirmPurchase(itemId) {
     const item = marketplaceItems[itemId];
     
+    if (!item) {
+        showNotification('Товар не найден', 'error');
+        return;
+    }
+    
     try {
+        console.log('Начало покупки товара:', itemId);
+        
+        // Проверяем баланс покупателя
+        if (userBalance < item.price) {
+            showNotification('Недостаточно средств для покупки', 'error');
+            return;
+        }
+
+        // Обновляем балансы
+        console.log('Обновление балансов...');
+        const balancesUpdated = await updateUserBalances(
+            currentUser.uid, 
+            item.sellerId, 
+            item.price
+        );
+
+        if (!balancesUpdated) {
+            showNotification('Ошибка при обработке платежа', 'error');
+            return;
+        }
+
         // Обновляем статус товара
+        console.log('Обновление статуса товара...');
         await db.ref('marketplace/items/' + itemId).update({
             status: 'sold',
             soldAt: new Date().toISOString(),
             buyerId: currentUser.uid,
             buyerName: currentUser.name
         });
-        
+
         // Создаем запись о транзакции
+        console.log('Создание транзакции...');
         const transactionId = db.ref().child('marketplace/transactions').push().key;
         await db.ref('marketplace/transactions/' + transactionId).set({
             id: transactionId,
@@ -2924,17 +2956,67 @@ async function confirmPurchase(itemId) {
             price: item.price,
             createdAt: new Date().toISOString()
         });
-        
-        // Обновляем балансы (в реальном приложении здесь была бы более сложная логика)
+
+        // Обновляем локальный баланс
         userBalance -= item.price;
         updateBalanceDisplay();
-        
-        showNotification('Поздравляем с покупкой!', 'success');
+
+        showNotification(`Поздравляем с покупкой "${item.title}"!`, 'success');
         document.getElementById('buy-item-modal').classList.add('hidden');
-        
+
     } catch (error) {
         console.error('Ошибка покупки товара:', error);
-        showNotification('Ошибка при покупке товара', 'error');
+        showNotification('Ошибка при покупке товара: ' + error.message, 'error');
+    }
+}
+
+// ==================== СИСТЕМА БАЛАНСОВ МАРКЕТПЛЕЙСА ====================
+
+// Функция для обновления балансов при покупке
+async function updateUserBalances(buyerId, sellerId, price) {
+    try {
+        console.log('Обновление балансов:', { buyerId, sellerId, price });
+        
+        // Списываем у покупателя
+        const buyerRef = db.ref('users/' + buyerId + '/balance');
+        const buyerSnapshot = await buyerRef.once('value');
+        const currentBuyerBalance = buyerSnapshot.val();
+        
+        // Если баланса нет, устанавливаем 1000
+        let newBuyerBalance;
+        if (currentBuyerBalance === null || currentBuyerBalance === undefined) {
+            newBuyerBalance = 1000 - price;
+        } else {
+            newBuyerBalance = currentBuyerBalance - price;
+        }
+        
+        if (newBuyerBalance < 0) {
+            throw new Error('Недостаточно средств');
+        }
+        
+        await buyerRef.set(newBuyerBalance);
+
+        // Начисляем продавцу
+        const sellerRef = db.ref('users/' + sellerId + '/balance');
+        const sellerSnapshot = await sellerRef.once('value');
+        const currentSellerBalance = sellerSnapshot.val();
+        
+        // Если баланса нет, устанавливаем 1000
+        let newSellerBalance;
+        if (currentSellerBalance === null || currentSellerBalance === undefined) {
+            newSellerBalance = 1000 + price;
+        } else {
+            newSellerBalance = currentSellerBalance + price;
+        }
+        
+        await sellerRef.set(newSellerBalance);
+
+        console.log(`Балансы обновлены: покупатель ${newBuyerBalance}, продавец ${newSellerBalance}`);
+        return true;
+        
+    } catch (error) {
+        console.error('Ошибка обновления балансов:', error);
+        return false;
     }
 }
 
@@ -2959,25 +3041,27 @@ function likeItem(itemId) {
 }
 
 function loadUserBalance() {
-    // В реальном приложении баланс загружался бы из базы данных
-    // Здесь используем фиксированный начальный баланс + вычисления
     if (db && currentUser) {
-        db.ref('marketplace/transactions').once('value')
-            .then(snapshot => {
-                const transactions = snapshot.val() || {};
-                const userTransactions = Object.values(transactions).filter(t => 
-                    t.buyerId === currentUser.uid
-                );
-                
-                const spent = userTransactions.reduce((sum, t) => sum + t.price, 0);
-                userBalance = Math.max(0, 1000 - spent); // Начальный баланс 1000
-                updateBalanceDisplay();
-            })
-            .catch(error => {
-                console.error('Ошибка загрузки баланса:', error);
+        // Загружаем баланс из базы данных
+        db.ref('users/' + currentUser.uid + '/balance').on('value', (snapshot) => {
+            const balance = snapshot.val();
+            console.log('Загружен баланс:', balance);
+            
+            if (balance !== null && balance !== undefined) {
+                userBalance = balance;
+            } else {
+                // Если баланса нет, устанавливаем начальный 1000
                 userBalance = 1000;
-                updateBalanceDisplay();
-            });
+                db.ref('users/' + currentUser.uid + '/balance').set(1000)
+                    .then(() => console.log('Установлен начальный баланс 1000'))
+                    .catch(err => console.error('Ошибка установки баланса:', err));
+            }
+            updateBalanceDisplay();
+        }, (error) => {
+            console.error('Ошибка загрузки баланса:', error);
+            userBalance = 1000;
+            updateBalanceDisplay();
+        });
     }
 }
 
