@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Газета «Душа компании 2.0»</title>
+    <title>Газета «Душа компании 3.0»</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="ico/logo.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -27,6 +27,9 @@
                     <i class="far fa-calendar"></i> 
                     <span id="current-date"></span>
                 </div>
+                <div class="header-user" id="header-user">
+                    <!-- Будет заполнено скриптом -->
+                </div>
             </div>
         </div>
         
@@ -49,6 +52,7 @@
                 <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i><span>Главная</span></a></li>
                 <li><a href="#news" class="nav-link"><i class="fas fa-newspaper"></i><span>Новости</span></a></li>
                 <li><a href="#articles" class="nav-link"><i class="fas fa-pen"></i><span>Статьи</span></a></li>
+                <li><a href="#marketplace" class="nav-link"><i class="fas fa-store"></i><span>Маркетплейс</span></a></li>
                 <li><a href="#gallery" class="nav-link"><i class="fas fa-images"></i><span>Галерея</span></a></li>
                 <li><a href="#videos" class="nav-link"><i class="fas fa-video"></i><span>Видео</span></a></li>
                 <li><a href="#friends" class="nav-link"><i class="fas fa-users"></i><span>Друзья</span></a></li>
@@ -71,21 +75,6 @@
                     <h2>Последние публикации</h2>
                     <div class="section-divider"></div>
                 </div>
-
-                <article class="article card" data-article-id="article5">
-                    <div class="article-header">
-                        <h3>Закрытие проекта</h3>
-                        <div class="article-meta">
-                            <span class="date"><i class="far fa-calendar"></i> 21 октября</span>
-                            <span class="author"><i class="far fa-user"></i> @personal</span>
-                        </div>
-                    </div>
-                    <div class="article-content">
-                    <p>Друзья, мы прекращаем поддержку этого сайта. Спасибо всем, кто был с нами эти месяцы — ваш фидбек был очень важен.</p>
-                    <p>Жизнь проекта показала, что он не нашёл отклика, а значит, пришло время для чего-то нового и более грандиозного!</p>
-                    <p>Уже сейчас мы разрабатываем новый продукт под брендом «SoulMarket», рассчитанный на широкую аудиторию. Мы усвоили уроки и готовы удивить вас снова. Всем спасибо!</p>
-                    </div>
-                </article>
 
                 <article class="article card" data-article-id="article1">
                     <div class="article-header">
@@ -208,21 +197,6 @@
                     <h2>Новости</h2>
                     <div class="section-divider"></div>
                 </div>
-
-                <article class="article card" data-article-id="article5">
-                    <div class="article-header">
-                        <h3>Закрытие проекта</h3>
-                        <div class="article-meta">
-                            <span class="date"><i class="far fa-calendar"></i> 21 октября</span>
-                            <span class="author"><i class="far fa-user"></i> @personal</span>
-                        </div>
-                    </div>
-                    <div class="article-content">
-                    <p>Друзья, мы прекращаем поддержку этого сайта. Спасибо всем, кто был с нами эти месяцы — ваш фидбек был очень важен.</p>
-                    <p>Жизнь проекта показала, что он не нашёл отклика, а значит, пришло время для чего-то нового и более грандиозного!</p>
-                    <p>Уже сейчас мы разрабатываем новый продукт под брендом «SoulMarket», рассчитанный на широкую аудиторию. Мы усвоили уроки и готовы удивить вас снова. Всем спасибо!</p>
-                    </div>
-                </article>
                 
                 <article class="article card" data-article-id="article2">
                     <div class="article-header">
@@ -348,6 +322,71 @@
                         </div>
                     </div>
                 </article>
+            </section>
+
+            <!-- Marketplace Section -->
+            <section id="marketplace" class="content-section hidden">
+                <div class="section-header">
+                    <h2><i class="fas fa-store"></i> Маркетплейс</h2>
+                    <div class="section-divider"></div>
+                </div>
+            
+                <div class="marketplace-controls card">
+                    <div class="controls-row">
+                        <div class="search-box">
+                            <input type="text" id="marketplace-search" placeholder="Поиск товаров...">
+                            <button class="btn-primary" id="marketplace-search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div class="filter-controls">
+                            <select id="category-filter">
+                                <option value="all">Все категории</option>
+                                <option value="digital">Цифровые товары</option>
+                                <option value="physical">Физические товары</option>
+                                <option value="services">Услуги</option>
+                            </select>
+                            <select id="sort-filter">
+                                <option value="newest">Сначала новые</option>
+                                <option value="price-low">Цена: по возрастанию</option>
+                                <option value="price-high">Цена: по убыванию</option>
+                                <option value="popular">Сначала популярные</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls-row">
+                        <button class="btn-primary" id="add-item-btn">
+                            <i class="fas fa-plus"></i> Добавить товар
+                        </button>
+                        <div class="user-balance" id="user-balance">
+                            <i class="fas fa-coins"></i>
+                            <span id="balance-amount">0</span> монет
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="marketplace-stats card">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-items">0</div>
+                        <div class="stat-label">Всего товаров</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="active-items">0</div>
+                        <div class="stat-label">Активных</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sold-items">0</div>
+                        <div class="stat-label">Продано</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-sales">0</div>
+                        <div class="stat-label">Общий оборот</div>
+                    </div>
+                </div>
+            
+                <div class="items-grid" id="marketplace-items">
+                    <!-- Товары будут загружены через JavaScript -->
+                </div>
             </section>
             
             <!-- Gallery Section -->
@@ -655,6 +694,16 @@
                     <h3>О газете</h3>
                 </div>
                 <p>Газета «Душа компании» публикуется с 2025 года. Мы освещаем самые важные события нашей дружной компании.</p>
+                <p>Новая версия с маркетплейсом! Покупайте, продавайте и обменивайтесь товарами с друзьями.</p>
+            </section>
+
+            <section class="sidebar-section card">
+                <div class="sidebar-header">
+                    <h3>Топ продавцов</h3>
+                </div>
+                <div class="top-sellers" id="top-sellers">
+                    <!-- Будет заполнено скриптом -->
+                </div>
             </section>
             
             <!-- Latest News -->
@@ -705,9 +754,9 @@
             </div>
             <div class="footer-section">
                 <h3>Редакция</h3>
-                <p>Главный редактор: </p><p><b>Гранёный А.В.</b></p>
+                <p>Главный редактор: </p><p><b>Немятов А.А.</b></p>
                 <p>Ответственный за выпуски: <b>Дябденко Б.К.</b></p>
-                <p>Технический редактор: <b>Гранёный А.В.</b></p>
+                <p>Разработчик: <b>Гранёный А.В., Немятов А.А., Апарин А.Г.</b></p>
                 <p>Фоторепортёр: <b>Дябденко Б.К.</b></p>
             </div>
             <div class="footer-section">
@@ -797,6 +846,212 @@
             </div>
         </div>
     </div>
+
+    <!-- Модальное окно добавления товара -->
+    <div id="add-item-modal" class="modal hidden">
+        <div class="modal-content card marketplace-modal">
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div>
+                        <h3>Добавить новый товар</h3>
+                        <p>Заполните информацию о вашем товаре</p>
+                    </div>
+                </div>
+                <button class="close-modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="add-item-form" class="marketplace-form">
+                    <!-- Прогресс-бар -->
+                    <div class="form-progress">
+                        <div class="progress-steps">
+                            <div class="progress-step active" data-step="1">
+                                <div class="step-number">1</div>
+                                <span>Основное</span>
+                            </div>
+                            <div class="progress-step" data-step="2">
+                                <div class="step-number">2</div>
+                                <span>Детали</span>
+                            </div>
+                            <div class="progress-step" data-step="3">
+                                <div class="step-number">3</div>
+                                <span>Цена</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 33%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Шаг 1: Основная информация -->
+                    <div class="form-step active" data-step="1">
+                        <div class="step-header">
+                            <h4>Основная информация</h4>
+                            <p>Расскажите о вашем товаре</p>
+                        </div>
+
+                        <div class="form-group floating-label">
+                            <input type="text" id="item-title" required maxlength="100">
+                            <label for="item-title">Название товара *</label>
+                            <div class="input-helper">Например: "Крутой мерч" или "Услуга дизайнера"</div>
+                        </div>
+
+                        <div class="form-group floating-label">
+                            <textarea id="item-description" rows="4" required maxlength="500"></textarea>
+                            <label for="item-description">Описание товара *</label>
+                            <div class="char-counter">
+                                <span id="item-desc-count">0</span>/500 символов
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Шаг 2: Детали -->
+                    <div class="form-step" data-step="2">
+                        <div class="step-header">
+                            <h4>Детали товара</h4>
+                            <p>Укажите категорию и состояние</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Категория *</label>
+                            <div class="category-selector">
+                                <div class="category-option" data-category="digital">
+                                    <div class="category-icon">
+                                        <i class="fas fa-laptop"></i>
+                                    </div>
+                                    <div class="category-info">
+                                        <div class="category-name">Цифровой товар</div>
+                                        <div class="category-desc">Файлы, программы, курс</div>
+                                    </div>
+                                </div>
+                                <div class="category-option" data-category="physical">
+                                    <div class="category-icon">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div class="category-info">
+                                        <div class="category-name">Физический товар</div>
+                                        <div class="category-desc">Вещи, мерч, предметы</div>
+                                    </div>
+                                </div>
+                                <div class="category-option" data-category="services">
+                                    <div class="category-icon">
+                                        <i class="fas fa-hands-helping"></i>
+                                    </div>
+                                    <div class="category-info">
+                                        <div class="category-name">Услуга</div>
+                                        <div class="category-desc">Помощь, консультация</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="item-category" required>
+                        </div>
+
+                        <div class="form-group" id="condition-group">
+                            <label class="form-label">Состояние товара</label>
+                            <div class="condition-selector">
+                                <div class="condition-option" data-condition="new">
+                                    <div class="condition-badge new">Новый</div>
+                                    <div class="condition-desc">Товар в оригинальной упаковке</div>
+                                </div>
+                                <div class="condition-option" data-condition="excellent">
+                                    <div class="condition-badge excellent">Отличное</div>
+                                    <div class="condition-desc">Почти не использовался</div>
+                                </div>
+                                <div class="condition-option" data-condition="good">
+                                    <div class="condition-badge good">Хорошее</div>
+                                    <div class="condition-desc">Есть небольшие следы использования</div>
+                                </div>
+                                <div class="condition-option" data-condition="satisfactory">
+                                    <div class="condition-badge satisfactory">Удовлетворительное</div>
+                                    <div class="condition-desc">Значительные следы использования</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="item-condition" value="new">
+                        </div>
+                    </div>
+
+                    <!-- Шаг 3: Цена -->
+                    <div class="form-step" data-step="3">
+                        <div class="step-header">
+                            <h4>Установите цену</h4>
+                            <p>Сколько стоит ваш товар?</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Цена в монетах *</label>
+                            <div class="price-input-container">
+                                <div class="price-input">
+                                    <input type="number" id="item-price" min="1" max="100000" required value="100">
+                                    <div class="price-currency">
+                                        <i class="fas fa-coins"></i>
+                                    </div>
+                                </div>
+                                <div class="price-suggestions">
+                                    <button type="button" class="price-suggestion" data-price="50">50</button>
+                                    <button type="button" class="price-suggestion" data-price="100">100</button>
+                                    <button type="button" class="price-suggestion" data-price="250">250</button>
+                                    <button type="button" class="price-suggestion" data-price="500">500</button>
+                                </div>
+                            </div>
+                            <div class="price-range">
+                                <div class="range-labels">
+                                    <span>1 монета</span>
+                                    <span>100 000 монет</span>
+                                </div>
+                                <input type="range" id="price-range" min="1" max="1000" value="100" class="price-slider">
+                            </div>
+                        </div>
+
+                        <div class="price-preview">
+                            <div class="preview-card">
+                                <div class="preview-title" id="preview-title">Название товара</div>
+                                <div class="preview-description" id="preview-description">Описание товара появится здесь</div>
+                                <div class="preview-price">
+                                    <span id="preview-price">100</span>
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Навигация по шагам -->
+                    <div class="form-navigation">
+                        <button type="button" class="btn-secondary" id="prev-step" style="display: none;">
+                            <i class="fas fa-arrow-left"></i> Назад
+                        </button>
+                        <button type="button" class="btn-primary" id="next-step">
+                            Далее <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="submit" class="btn-success" id="submit-form" style="display: none;">
+                            <i class="fas fa-rocket"></i> Разместить товар
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно покупки товара -->
+    <div id="buy-item-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h3>Покупка товара</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="buy-item-info">
+                    <!-- Информация о товаре будет здесь -->
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-buy-item">Отмена</button>
+                    <button type="button" class="btn-primary" id="confirm-buy-item">Купить</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Scroll to Top Button -->
     <button class="scroll-to-top">
@@ -806,15 +1061,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
