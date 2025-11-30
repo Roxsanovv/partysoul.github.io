@@ -2911,17 +2911,23 @@ async function confirmPurchase(itemId) {
         return;
     }
     
+    // Проверяем, не пытается ли пользователь купить свой товар
+    if (item.sellerId === currentUser.uid) {
+        showNotification('Вы не можете купить свой собственный товар', 'error');
+        return;
+    }
+    
     try {
-        console.log('Начало покупки товара:', itemId);
+        console.log('🎯 Начало процесса покупки товара:', item.title);
+        console.log('💰 Цена:', item.price, 'Баланс пользователя:', userBalance);
         
-        // Проверяем баланс покупателя
+        // Проверяем локальный баланс
         if (userBalance < item.price) {
-            showNotification('Недостаточно средств для покупки', 'error');
+            showNotification(`Недостаточно средств. Нужно: ${item.price}, у вас: ${userBalance}`, 'error');
             return;
         }
 
-        // Обновляем балансы
-        console.log('Обновление балансов...');
+        console.log('🔄 Вызов updateUserBalances...');
         const balancesUpdated = await updateUserBalances(
             currentUser.uid, 
             item.sellerId, 
@@ -2929,21 +2935,22 @@ async function confirmPurchase(itemId) {
         );
 
         if (!balancesUpdated) {
-            showNotification('Ошибка при обработке платежа', 'error');
+            showNotification('Ошибка при обработке платежа. Попробуйте еще раз.', 'error');
             return;
         }
 
+        console.log('📦 Обновление статуса товара...');
         // Обновляем статус товара
-        console.log('Обновление статуса товара...');
         await db.ref('marketplace/items/' + itemId).update({
             status: 'sold',
             soldAt: new Date().toISOString(),
             buyerId: currentUser.uid,
-            buyerName: currentUser.name
+            buyerName: currentUser.name,
+            buyerAvatar: currentUser.avatar
         });
 
+        console.log('💳 Создание записи о транзакции...');
         // Создаем запись о транзакции
-        console.log('Создание транзакции...');
         const transactionId = db.ref().child('marketplace/transactions').push().key;
         await db.ref('marketplace/transactions/' + transactionId).set({
             id: transactionId,
@@ -2954,18 +2961,21 @@ async function confirmPurchase(itemId) {
             buyerId: currentUser.uid,
             buyerName: currentUser.name,
             price: item.price,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            status: 'completed'
         });
 
         // Обновляем локальный баланс
         userBalance -= item.price;
         updateBalanceDisplay();
+        
+        console.log('🎉 Покупка завершена успешно!');
 
-        showNotification(`Поздравляем с покупкой "${item.title}"!`, 'success');
+        showNotification(`🎊 Поздравляем! Вы купили "${item.title}" за ${item.price} монет`, 'success');
         document.getElementById('buy-item-modal').classList.add('hidden');
 
     } catch (error) {
-        console.error('Ошибка покупки товара:', error);
+        console.error('💥 Критическая ошибка при покупке:', error);
         showNotification('Ошибка при покупке товара: ' + error.message, 'error');
     }
 }
@@ -2973,49 +2983,51 @@ async function confirmPurchase(itemId) {
 // ==================== СИСТЕМА БАЛАНСОВ МАРКЕТПЛЕЙСА ====================
 
 // Функция для обновления балансов при покупке
+// Функция для обновления балансов при покупке
 async function updateUserBalances(buyerId, sellerId, price) {
     try {
-        console.log('Обновление балансов:', { buyerId, sellerId, price });
+        console.log('🔄 Начало обновления балансов:', { buyerId, sellerId, price });
         
-        // Списываем у покупателя
-        const buyerRef = db.ref('users/' + buyerId + '/balance');
-        const buyerSnapshot = await buyerRef.once('value');
-        const currentBuyerBalance = buyerSnapshot.val();
+        // Получаем текущие балансы
+        const buyerSnapshot = await db.ref('users/' + buyerId + '/balance').once('value');
+        const sellerSnapshot = await db.ref('users/' + sellerId + '/balance').once('value');
         
-        // Если баланса нет, устанавливаем 1000
-        let newBuyerBalance;
-        if (currentBuyerBalance === null || currentBuyerBalance === undefined) {
-            newBuyerBalance = 1000 - price;
-        } else {
-            newBuyerBalance = currentBuyerBalance - price;
+        let buyerBalance = buyerSnapshot.val();
+        let sellerBalance = sellerSnapshot.val();
+        
+        console.log('📊 Текущие балансы:', { buyerBalance, sellerBalance });
+        
+        // Если балансов нет, устанавливаем начальные значения
+        if (buyerBalance === null || buyerBalance === undefined) {
+            buyerBalance = 1000;
+            await db.ref('users/' + buyerId + '/balance').set(1000);
         }
         
-        if (newBuyerBalance < 0) {
-            throw new Error('Недостаточно средств');
+        if (sellerBalance === null || sellerBalance === undefined) {
+            sellerBalance = 1000;
+            await db.ref('users/' + sellerId + '/balance').set(1000);
         }
         
-        await buyerRef.set(newBuyerBalance);
-
-        // Начисляем продавцу
-        const sellerRef = db.ref('users/' + sellerId + '/balance');
-        const sellerSnapshot = await sellerRef.once('value');
-        const currentSellerBalance = sellerSnapshot.val();
-        
-        // Если баланса нет, устанавливаем 1000
-        let newSellerBalance;
-        if (currentSellerBalance === null || currentSellerBalance === undefined) {
-            newSellerBalance = 1000 + price;
-        } else {
-            newSellerBalance = currentSellerBalance + price;
+        // Проверяем достаточно ли средств у покупателя
+        if (buyerBalance < price) {
+            throw new Error(`Недостаточно средств: ${buyerBalance} < ${price}`);
         }
         
-        await sellerRef.set(newSellerBalance);
-
-        console.log(`Балансы обновлены: покупатель ${newBuyerBalance}, продавец ${newSellerBalance}`);
+        // Вычисляем новые балансы
+        const newBuyerBalance = buyerBalance - price;
+        const newSellerBalance = sellerBalance + price;
+        
+        console.log('🆕 Новые балансы:', { newBuyerBalance, newSellerBalance });
+        
+        // Обновляем балансы в базе
+        await db.ref('users/' + buyerId + '/balance').set(newBuyerBalance);
+        await db.ref('users/' + sellerId + '/balance').set(newSellerBalance);
+        
+        console.log('✅ Балансы успешно обновлены');
         return true;
         
     } catch (error) {
-        console.error('Ошибка обновления балансов:', error);
+        console.error('❌ Ошибка обновления балансов:', error);
         return false;
     }
 }
@@ -3371,3 +3383,4 @@ function showAddItemModal() {
 }
 
 console.log('Firebase script with FIXED FRIEND STATISTICS loaded successfully');
+
