@@ -31,6 +31,12 @@ let wallPosts = {};
 let currentWallUserId = null;
 let wallPostsCache = new Map();
 
+let currentStep = 1;
+const totalSteps = 3;
+
+let marketplaceItems = {};
+let userBalance = 1000; // Начальный баланс для всех пользователей
+
 // Коллекция предустановленных emoji аватаров
 const defaultAvatars = [
     '😀', '😎', '🤩', '🧐', '😊', '😇', '🥰', '😍',
@@ -1800,6 +1806,8 @@ async function initSystems() {
         
         // Слушаем реальные обновления из Firebase
         startRealtimeUpdates();
+
+        initMarketplace();
         
         console.log('Все системы инициализированы');
         
@@ -1826,6 +1834,8 @@ function initAuth() {
             
             // Загружаем систему друзей после входа
             loadFriendsData();
+
+            loadUserBalance();
             
             console.log('Пользователь вошел:', currentUser);
         } else {
@@ -2468,6 +2478,812 @@ function showNotification(message, type = 'info') {
             notification.remove();
         }
     }, 5000);
+}
+
+
+// ==================== СИСТЕМА МАРКЕТПЛЕЙСА 3.0 ====================
+
+function initMarketplace() {
+    console.log('Инициализация маркетплейса...');
+    
+    // Загрузка товаров
+    if (db) {
+        db.ref('marketplace/items').on('value', (snapshot) => {
+            marketplaceItems = snapshot.val() || {};
+            updateMarketplaceDisplay();
+            updateMarketplaceStats();
+            updateHotItemsPreview();
+        });
+        
+        // Загрузка баланса пользователя
+        if (currentUser) {
+            loadUserBalance();
+        }
+    }
+    
+    // Инициализация обработчиков событий
+    initMarketplaceEventHandlers();
+    initMarketplaceForm();
+}
+
+function initMarketplaceEventHandlers() {
+    // Кнопка добавления товара
+    const addItemBtn = document.getElementById('add-item-btn');
+    if (addItemBtn) {
+        addItemBtn.addEventListener('click', showAddItemModal);
+    }
+    
+    // Форма добавления товара
+    const addItemForm = document.getElementById('add-item-form');
+    if (addItemForm) {
+        addItemForm.addEventListener('submit', handleAddItem);
+    }
+    
+    // Кнопка отмены добавления
+    const cancelAddItem = document.getElementById('cancel-add-item');
+    if (cancelAddItem) {
+        cancelAddItem.addEventListener('click', closeAddItemModal);
+    }
+    
+    // Поиск товаров
+    const searchBtn = document.getElementById('marketplace-search-btn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchItems);
+    }
+    
+    const searchInput = document.getElementById('marketplace-search');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchItems();
+        });
+    }
+    
+    // Фильтры
+    const categoryFilter = document.getElementById('category-filter');
+    const sortFilter = document.getElementById('sort-filter');
+    
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', updateMarketplaceDisplay);
+    }
+    
+    if (sortFilter) {
+        sortFilter.addEventListener('change', updateMarketplaceDisplay);
+    }
+    
+    // Счетчик символов в описании
+    const itemDescription = document.getElementById('item-description');
+    if (itemDescription) {
+        itemDescription.addEventListener('input', function() {
+            const counter = document.getElementById('item-desc-count');
+            if (counter) counter.textContent = this.value.length;
+        });
+    }
+
+    const closeModalButtons = document.querySelectorAll('#add-item-modal .close-modal, #buy-item-modal .close-modal');
+    closeModalButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.modal').classList.add('hidden');
+        });
+    });
+    
+    // Закрытие по клику вне модального окна
+    const modals = document.querySelectorAll('#add-item-modal, #buy-item-modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    });
+}
+
+function showAddItemModal() {
+    if (!currentUser) {
+        showNotification('Войдите в систему для добавления товаров', 'error');
+        showLoginModal();
+        return;
+    }
+    
+    document.getElementById('add-item-modal').classList.remove('hidden');
+}
+
+function closeAddItemModal() {
+    document.getElementById('add-item-modal').classList.add('hidden');
+    document.getElementById('add-item-form').reset();
+    
+    const counter = document.getElementById('item-desc-count');
+    if (counter) counter.textContent = '0';
+    
+    // Сброс шагов формы
+    currentStep = 1;
+    updateFormSteps();
+}
+
+async function handleAddItem(e) {
+    e.preventDefault();
+    
+    if (!currentUser || !db) {
+        showNotification('Ошибка: пользователь не авторизован', 'error');
+        return;
+    }
+    
+    // ДОБАВЬТЕ ЭТУ ПРОВЕРКУ:
+    if (!currentUser.uid) {
+        showNotification('Ошибка: ID пользователя не найден', 'error');
+        return;
+    }
+    
+    const title = document.getElementById('item-title').value.trim();
+    const description = document.getElementById('item-description').value.trim();
+    const price = parseInt(document.getElementById('item-price').value);
+    const category = document.getElementById('item-category').value;
+    const condition = document.getElementById('item-condition').value;
+    
+    if (!title || !description || !price) {
+        showNotification('Заполните все обязательные поля', 'error');
+        return;
+    }
+    
+    if (price < 1 || price > 100000) {
+        showNotification('Цена должна быть от 1 до 100000 монет', 'error');
+        return;
+    }
+    
+    try {
+        showNotification('Добавление товара...', 'warning');
+        
+        const itemId = db.ref().child('marketplace/items').push().key;
+        const itemData = {
+            id: itemId,
+            title: title,
+            description: description,
+            price: price,
+            category: category,
+            condition: condition,
+            sellerId: currentUser.uid,
+            sellerName: currentUser.name,
+            sellerAvatar: currentUser.avatar,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            views: 0,
+            likes: 0
+        };
+        
+        await db.ref('marketplace/items/' + itemId).set(itemData);
+        
+        showNotification('Товар успешно размещен!', 'success');
+        closeAddItemModal();
+        
+    } catch (error) {
+        console.error('Ошибка добавления товара:', error);
+        
+        // ДОБАВЬТЕ ЭТУ ОБРАБОТКУ ОШИБКИ:
+        if (error.code === 'PERMISSION_DENIED') {
+            showNotification('Ошибка доступа. Проверьте правила безопасности Firebase', 'error');
+        } else {
+            showNotification('Ошибка добавления товара: ' + error.message, 'error');
+        }
+    }
+}
+
+function updateMarketplaceDisplay() {
+    const container = document.getElementById('marketplace-items');
+    if (!container) return;
+    
+    const categoryFilter = document.getElementById('category-filter')?.value || 'all';
+    const sortFilter = document.getElementById('sort-filter')?.value || 'newest';
+    const searchTerm = document.getElementById('marketplace-search')?.value.toLowerCase() || '';
+    
+    let items = Object.values(marketplaceItems);
+    
+    // Фильтрация по категории
+    if (categoryFilter !== 'all') {
+        items = items.filter(item => item.category === categoryFilter);
+    }
+    
+    // Поиск
+    if (searchTerm) {
+        items = items.filter(item => 
+            item.title.toLowerCase().includes(searchTerm) || 
+            item.description.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // Сортировка
+    items.sort((a, b) => {
+        switch (sortFilter) {
+            case 'price-low':
+                return a.price - b.price;
+            case 'price-high':
+                return b.price - a.price;
+            case 'popular':
+                return (b.likes || 0) - (a.likes || 0);
+            case 'newest':
+            default:
+                return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+    });
+    
+    // Отображение
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div class="no-items" style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="fas fa-box-open" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>Товары не найдены</p>
+                ${searchTerm ? '<p class="hint">Попробуйте изменить параметры поиска</p>' : ''}
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    items.forEach(item => {
+        if (item.status !== 'active') return;
+        
+        const isOwnItem = currentUser && item.sellerId === currentUser.uid;
+        const canBuy = currentUser && !isOwnItem && userBalance >= item.price;
+        
+        html += `
+            <div class="marketplace-item card" data-item-id="${item.id}">
+                <div class="item-image">
+                    <i class="fas fa-${getItemIcon(item.category)}"></i>
+                    <div class="item-badge">${getCategoryName(item.category)}</div>
+                </div>
+                <div class="item-content">
+                    <div class="item-header">
+                        <div class="item-title">${escapeHtml(item.title)}</div>
+                        <div class="item-price">${item.price} <i class="fas fa-coins"></i></div>
+                    </div>
+                    <div class="item-description">${escapeHtml(item.description)}</div>
+                    <div class="item-meta">
+                        <div class="item-seller">
+                            <div class="seller-avatar">${item.sellerAvatar || (item.sellerName ? item.sellerName.charAt(0).toUpperCase() : 'U')}</div>
+                            <span>${escapeHtml(item.sellerName)}</span>
+                        </div>
+                        <div class="item-date">${new Date(item.createdAt).toLocaleDateString('ru-RU')}</div>
+                    </div>
+                    <div class="item-actions">
+                        ${isOwnItem ? `
+                            <button class="btn-secondary" onclick="editItem('${item.id}')" style="flex: 1;">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </button>
+                            <button class="btn-danger" onclick="deleteItem('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : `
+                            <button class="btn-buy" onclick="buyItem('${item.id}')" ${!canBuy ? 'disabled' : ''}>
+                                ${canBuy ? '<i class="fas fa-shopping-cart"></i> Купить' : 'Недостаточно средств'}
+                            </button>
+                            <button class="btn-secondary" onclick="likeItem('${item.id}')">
+                                <i class="fas fa-heart"></i> ${item.likes || 0}
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function getItemIcon(category) {
+    const icons = {
+        'digital': 'laptop',
+        'physical': 'box',
+        'services': 'hands-helping'
+    };
+    return icons[category] || 'tag';
+}
+
+function getCategoryName(category) {
+    const names = {
+        'digital': 'Цифровой',
+        'physical': 'Физический',
+        'services': 'Услуга'
+    };
+    return names[category] || 'Товар';
+}
+
+function updateMarketplaceStats() {
+    const items = Object.values(marketplaceItems);
+    const activeItems = items.filter(item => item.status === 'active').length;
+    const soldItems = items.filter(item => item.status === 'sold').length;
+    const totalSales = items
+        .filter(item => item.status === 'sold')
+        .reduce((sum, item) => sum + (item.price || 0), 0);
+    
+    document.getElementById('total-items').textContent = items.length;
+    document.getElementById('active-items').textContent = activeItems;
+    document.getElementById('sold-items').textContent = soldItems;
+    document.getElementById('total-sales').textContent = totalSales;
+}
+
+function updateHotItemsPreview() {
+    const container = document.getElementById('hot-items-preview');
+    if (!container) return;
+    
+    const items = Object.values(marketplaceItems)
+        .filter(item => item.status === 'active')
+        .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+        .slice(0, 3);
+    
+    if (items.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Пока нет товаров</p>';
+        return;
+    }
+    
+    let html = '';
+    items.forEach(item => {
+        html += `
+            <div class="hot-item" onclick="showSection('marketplace')">
+                <div class="hot-item-image">
+                    <i class="fas fa-${getItemIcon(item.category)}"></i>
+                </div>
+                <div class="hot-item-title">${escapeHtml(item.title)}</div>
+                <div class="hot-item-price">${item.price} <i class="fas fa-coins"></i></div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function searchItems() {
+    updateMarketplaceDisplay();
+}
+
+async function buyItem(itemId) {
+    if (!currentUser) {
+        showNotification('Войдите в систему для покупки товаров', 'error');
+        showLoginModal();
+        return;
+    }
+    
+    const item = marketplaceItems[itemId];
+    if (!item) {
+        showNotification('Товар не найден', 'error');
+        return;
+    }
+    
+    if (item.sellerId === currentUser.uid) {
+        showNotification('Вы не можете купить свой собственный товар', 'error');
+        return;
+    }
+    
+    if (userBalance < item.price) {
+        showNotification('Недостаточно средств для покупки', 'error');
+        return;
+    }
+    
+    // Показываем модальное окно подтверждения
+    showBuyConfirmationModal(item);
+}
+
+function showBuyConfirmationModal(item) {
+    const modal = document.getElementById('buy-item-modal');
+    const infoContainer = document.getElementById('buy-item-info');
+    
+    infoContainer.innerHTML = `
+        <div class="buy-item-details">
+            <h4>${escapeHtml(item.title)}</h4>
+            <p>${escapeHtml(item.description)}</p>
+            <div class="buy-item-price" style="font-size: 1.5rem; color: var(--fire); margin: 1rem 0;">
+                ${item.price} <i class="fas fa-coins"></i>
+            </div>
+            <div class="buy-item-seller">
+                <strong>Продавец:</strong> ${escapeHtml(item.sellerName)}
+            </div>
+            <div class="buy-item-balance" style="margin: 1rem 0; padding: 1rem; background: var(--dark-surface); border-radius: var(--border-radius);">
+                <strong>Ваш баланс:</strong> ${userBalance} <i class="fas fa-coins"></i>
+                <br>
+                <strong>После покупки:</strong> ${userBalance - item.price} <i class="fas fa-coins"></i>
+            </div>
+        </div>
+    `;
+    
+    const confirmBtn = document.getElementById('confirm-buy-item');
+    const cancelBtn = document.getElementById('cancel-buy-item');
+    
+    // Удаляем старые обработчики
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    // Добавляем новые обработчики
+    newConfirmBtn.addEventListener('click', () => confirmPurchase(item.id));
+    newCancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    
+    modal.classList.remove('hidden');
+}
+
+async function confirmPurchase(itemId) {
+    const item = marketplaceItems[itemId];
+    
+    try {
+        // Обновляем статус товара
+        await db.ref('marketplace/items/' + itemId).update({
+            status: 'sold',
+            soldAt: new Date().toISOString(),
+            buyerId: currentUser.uid,
+            buyerName: currentUser.name
+        });
+        
+        // Создаем запись о транзакции
+        const transactionId = db.ref().child('marketplace/transactions').push().key;
+        await db.ref('marketplace/transactions/' + transactionId).set({
+            id: transactionId,
+            itemId: itemId,
+            itemTitle: item.title,
+            sellerId: item.sellerId,
+            sellerName: item.sellerName,
+            buyerId: currentUser.uid,
+            buyerName: currentUser.name,
+            price: item.price,
+            createdAt: new Date().toISOString()
+        });
+        
+        // Обновляем балансы (в реальном приложении здесь была бы более сложная логика)
+        userBalance -= item.price;
+        updateBalanceDisplay();
+        
+        showNotification('Поздравляем с покупкой!', 'success');
+        document.getElementById('buy-item-modal').classList.add('hidden');
+        
+    } catch (error) {
+        console.error('Ошибка покупки товара:', error);
+        showNotification('Ошибка при покупке товара', 'error');
+    }
+}
+
+function likeItem(itemId) {
+    if (!currentUser) {
+        showNotification('Войдите в систему чтобы оценить товар', 'error');
+        return;
+    }
+    
+    const item = marketplaceItems[itemId];
+    if (!item) return;
+    
+    const newLikes = (item.likes || 0) + 1;
+    
+    db.ref('marketplace/items/' + itemId + '/likes').set(newLikes)
+        .then(() => {
+            showNotification('Спасибо за оценку!', 'success');
+        })
+        .catch(error => {
+            console.error('Ошибка оценки товара:', error);
+        });
+}
+
+function loadUserBalance() {
+    // В реальном приложении баланс загружался бы из базы данных
+    // Здесь используем фиксированный начальный баланс + вычисления
+    if (db && currentUser) {
+        db.ref('marketplace/transactions').once('value')
+            .then(snapshot => {
+                const transactions = snapshot.val() || {};
+                const userTransactions = Object.values(transactions).filter(t => 
+                    t.buyerId === currentUser.uid
+                );
+                
+                const spent = userTransactions.reduce((sum, t) => sum + t.price, 0);
+                userBalance = Math.max(0, 1000 - spent); // Начальный баланс 1000
+                updateBalanceDisplay();
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки баланса:', error);
+                userBalance = 1000;
+                updateBalanceDisplay();
+            });
+    }
+}
+
+function updateBalanceDisplay() {
+    const balanceElement = document.getElementById('balance-amount');
+    if (balanceElement) {
+        balanceElement.textContent = userBalance;
+    }
+    
+    // Обновляем мини-баланс в хедере
+    const headerUser = document.getElementById('header-user');
+    if (headerUser && currentUser) {
+        headerUser.innerHTML = `
+            <div class="user-balance-mini">
+                <i class="fas fa-coins"></i> ${userBalance}
+            </div>
+            <div>${currentUser.name}</div>
+        `;
+    }
+}
+
+
+function editItem(itemId) {
+    showNotification('Функция редактирования в разработке', 'warning');
+}
+
+function deleteItem(itemId) {
+    if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
+        return;
+    }
+    
+    if (db && currentUser) {
+        db.ref('marketplace/items/' + itemId).remove()
+            .then(() => {
+                showNotification('Товар удален', 'success');
+            })
+            .catch(error => {
+                console.error('Ошибка удаления товара:', error);
+                showNotification('Ошибка удаления товара', 'error');
+            });
+    }
+}
+
+// Функция для обновления топа продавцов
+function updateTopSellers() {
+    const container = document.getElementById('top-sellers');
+    if (!container) return;
+    
+    // Простая заглушка - в реальном приложении здесь была бы сложная логика
+    container.innerHTML = `
+        <div class="top-seller">
+            <div class="seller-rank">1</div>
+            <div class="seller-info">
+                <div class="seller-name">Лидер продаж</div>
+                <div class="seller-stats">10 товаров</div>
+            </div>
+        </div>
+        <div class="top-seller">
+            <div class="seller-rank">2</div>
+            <div class="seller-info">
+                <div class="seller-name">Активный продавец</div>
+                <div class="seller-stats">7 товаров</div>
+            </div>
+        </div>
+        <div class="top-seller">
+            <div class="seller-rank">3</div>
+            <div class="seller-info">
+                <div class="seller-name">Новичок</div>
+                <div class="seller-stats">3 товара</div>
+            </div>
+        </div>
+    `;
+}
+
+// Обновляем топ продавцов при загрузке
+function updateTopSellers() {
+    const container = document.getElementById('top-sellers');
+    if (!container) return;
+    
+    const sellers = {};
+    
+    // Считаем товары по продавцам
+    Object.values(marketplaceItems).forEach(item => {
+        if (item.status === 'active') {
+            if (!sellers[item.sellerId]) {
+                sellers[item.sellerId] = {
+                    name: item.sellerName,
+                    avatar: item.sellerAvatar,
+                    count: 0
+                };
+            }
+            sellers[item.sellerId].count++;
+        }
+    });
+    
+    // Сортируем по количеству товаров
+    const topSellers = Object.entries(sellers)
+        .sort(([,a], [,b]) => b.count - a.count)
+        .slice(0, 3);
+    
+    if (topSellers.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Пока нет продавцов</p>';
+        return;
+    }
+    
+    let html = '';
+    topSellers.forEach(([sellerId, seller], index) => {
+        html += `
+            <div class="top-seller">
+                <div class="seller-rank">${index + 1}</div>
+                <div class="seller-avatar" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                    ${seller.avatar || (seller.name ? seller.name.charAt(0).toUpperCase() : 'U')}
+                </div>
+                <div class="seller-info">
+                    <div class="seller-name">${escapeHtml(seller.name)}</div>
+                    <div class="seller-stats">${seller.count} товаров</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Обновляем топ продавцов при изменении данных
+function updateMarketplaceStats() {
+    const items = Object.values(marketplaceItems);
+    const activeItems = items.filter(item => item.status === 'active').length;
+    const soldItems = items.filter(item => item.status === 'sold').length;
+    const totalSales = items
+        .filter(item => item.status === 'sold')
+        .reduce((sum, item) => sum + (item.price || 0), 0);
+    
+    document.getElementById('total-items').textContent = items.length;
+    document.getElementById('active-items').textContent = activeItems;
+    document.getElementById('sold-items').textContent = soldItems;
+    document.getElementById('total-sales').textContent = totalSales;
+    
+    // ДОБАВЬТЕ ЭТУ СТРОЧКУ:
+    updateTopSellers();
+}
+
+
+// ==================== МНОГОШАГОВАЯ ФОРМА ДОБАВЛЕНИЯ ТОВАРА ====================
+
+function initMarketplaceForm() {
+    // Инициализация многошаговой формы
+    updateFormSteps();
+    setupFormEventHandlers();
+}
+
+function setupFormEventHandlers() {
+    // Навигация по шагам
+    document.getElementById('next-step').addEventListener('click', nextStep);
+    document.getElementById('prev-step').addEventListener('click', prevStep);
+    
+    // Выбор категории
+    document.querySelectorAll('.category-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.category-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('item-category').value = this.dataset.category;
+        });
+    });
+    
+    // Выбор состояния
+    document.querySelectorAll('.condition-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.condition-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('item-condition').value = this.dataset.condition;
+        });
+    });
+    
+    // Предложенные цены
+    document.querySelectorAll('.price-suggestion').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const price = this.dataset.price;
+            document.getElementById('item-price').value = price;
+            document.getElementById('price-range').value = Math.min(price, 1000);
+            updatePricePreview();
+        });
+    });
+    
+    // Слайдер цены
+    document.getElementById('price-range').addEventListener('input', function() {
+        document.getElementById('item-price').value = this.value;
+        updatePricePreview();
+    });
+    
+    // Ввод цены вручную
+    document.getElementById('item-price').addEventListener('input', function() {
+        const price = Math.min(Math.max(1, this.value), 100000);
+        document.getElementById('price-range').value = Math.min(price, 1000);
+        updatePricePreview();
+    });
+    
+    // Обновление превью в реальном времени
+    document.getElementById('item-title').addEventListener('input', updatePricePreview);
+    document.getElementById('item-description').addEventListener('input', updatePricePreview);
+}
+
+function nextStep() {
+    if (validateStep(currentStep)) {
+        currentStep++;
+        updateFormSteps();
+    }
+}
+
+function prevStep() {
+    currentStep--;
+    updateFormSteps();
+}
+
+function validateStep(step) {
+    switch (step) {
+        case 1:
+            const title = document.getElementById('item-title').value.trim();
+            const description = document.getElementById('item-description').value.trim();
+            
+            if (!title) {
+                showNotification('Введите название товара', 'error');
+                return false;
+            }
+            if (!description) {
+                showNotification('Введите описание товара', 'error');
+                return false;
+            }
+            return true;
+            
+        case 2:
+            const category = document.getElementById('item-category').value;
+            if (!category) {
+                showNotification('Выберите категорию товара', 'error');
+                return false;
+            }
+            return true;
+            
+        case 3:
+            const price = parseInt(document.getElementById('item-price').value);
+            if (!price || price < 1 || price > 100000) {
+                showNotification('Укажите корректную цену (1-100000 монет)', 'error');
+                return false;
+            }
+            return true;
+            
+        default:
+            return true;
+    }
+}
+
+function updateFormSteps() {
+    // Обновляем прогресс-бар
+    document.querySelectorAll('.progress-step').forEach((step, index) => {
+        step.classList.toggle('active', index + 1 <= currentStep);
+    });
+    
+    document.querySelector('.progress-fill').style.width = `${(currentStep / totalSteps) * 100}%`;
+    
+    // Показываем/скрываем шаги
+    document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.toggle('active', parseInt(step.dataset.step) === currentStep);
+    });
+    
+    // Обновляем кнопки навигации
+    document.getElementById('prev-step').style.display = currentStep > 1 ? 'flex' : 'none';
+    document.getElementById('next-step').style.display = currentStep < totalSteps ? 'flex' : 'none';
+    document.getElementById('submit-form').style.display = currentStep === totalSteps ? 'flex' : 'none';
+    
+    // Обновляем превью на последнем шаге
+    if (currentStep === 3) {
+        updatePricePreview();
+    }
+}
+
+function updatePricePreview() {
+    const title = document.getElementById('item-title').value.trim() || 'Название товара';
+    const description = document.getElementById('item-description').value.trim() || 'Описание товара появится здесь';
+    const price = document.getElementById('item-price').value || '100';
+    
+    document.getElementById('preview-title').textContent = title;
+    document.getElementById('preview-description').textContent = description;
+    document.getElementById('preview-price').textContent = price;
+}
+
+// Обновите функцию showAddItemModal
+function showAddItemModal() {
+    if (!currentUser) {
+        showNotification('Войдите в систему для добавления товаров', 'error');
+        showLoginModal();
+        return;
+    }
+    
+    // Сброс формы
+    currentStep = 1;
+    document.getElementById('add-item-form').reset();
+    document.querySelectorAll('.category-option, .condition-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelector('.category-option[data-category="digital"]').classList.add('selected');
+    document.querySelector('.condition-option[data-condition="new"]').classList.add('selected');
+    document.getElementById('item-category').value = 'digital';
+    document.getElementById('item-condition').value = 'new';
+    document.getElementById('item-price').value = '100';
+    document.getElementById('price-range').value = '100';
+    
+    updateFormSteps();
+    document.getElementById('add-item-modal').classList.remove('hidden');
 }
 
 console.log('Firebase script with FIXED FRIEND STATISTICS loaded successfully');
