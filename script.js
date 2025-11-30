@@ -2803,6 +2803,25 @@ function updateMarketplaceStats() {
     document.getElementById('total-sales').textContent = totalSales;
 }
 
+// Получение статистики продавца
+async function getSellerStats(sellerId) {
+    const items = Object.values(marketplaceItems);
+    
+    const sellerItems = items.filter(item => item.sellerId === sellerId);
+    const activeItems = sellerItems.filter(item => item.status === 'active').length;
+    const soldItems = sellerItems.filter(item => item.status === 'sold').length;
+    const totalRevenue = sellerItems
+        .filter(item => item.status === 'sold')
+        .reduce((sum, item) => sum + (item.price || 0), 0);
+    
+    return {
+        activeItems,
+        soldItems,
+        totalRevenue,
+        totalItems: sellerItems.length
+    };
+}
+
 function updateHotItemsPreview() {
     const container = document.getElementById('hot-items-preview');
     if (!container) return;
@@ -2911,23 +2930,17 @@ async function confirmPurchase(itemId) {
         return;
     }
     
-    // Проверяем, не пытается ли пользователь купить свой товар
-    if (item.sellerId === currentUser.uid) {
-        showNotification('Вы не можете купить свой собственный товар', 'error');
-        return;
-    }
-    
     try {
-        console.log('🎯 Начало процесса покупки товара:', item.title);
-        console.log('💰 Цена:', item.price, 'Баланс пользователя:', userBalance);
+        console.log('Начало покупки товара:', itemId);
         
-        // Проверяем локальный баланс
+        // Проверяем баланс покупателя
         if (userBalance < item.price) {
-            showNotification(`Недостаточно средств. Нужно: ${item.price}, у вас: ${userBalance}`, 'error');
+            showNotification('Недостаточно средств для покупки', 'error');
             return;
         }
 
-        console.log('🔄 Вызов updateUserBalances...');
+        // Обновляем балансы
+        console.log('Обновление балансов...');
         const balancesUpdated = await updateUserBalances(
             currentUser.uid, 
             item.sellerId, 
@@ -2935,22 +2948,21 @@ async function confirmPurchase(itemId) {
         );
 
         if (!balancesUpdated) {
-            showNotification('Ошибка при обработке платежа. Попробуйте еще раз.', 'error');
+            showNotification('Ошибка при обработке платежа', 'error');
             return;
         }
 
-        console.log('📦 Обновление статуса товара...');
         // Обновляем статус товара
+        console.log('Обновление статуса товара...');
         await db.ref('marketplace/items/' + itemId).update({
             status: 'sold',
             soldAt: new Date().toISOString(),
             buyerId: currentUser.uid,
-            buyerName: currentUser.name,
-            buyerAvatar: currentUser.avatar
+            buyerName: currentUser.name
         });
 
-        console.log('💳 Создание записи о транзакции...');
         // Создаем запись о транзакции
+        console.log('Создание транзакции...');
         const transactionId = db.ref().child('marketplace/transactions').push().key;
         await db.ref('marketplace/transactions/' + transactionId).set({
             id: transactionId,
@@ -2961,21 +2973,18 @@ async function confirmPurchase(itemId) {
             buyerId: currentUser.uid,
             buyerName: currentUser.name,
             price: item.price,
-            createdAt: new Date().toISOString(),
-            status: 'completed'
+            createdAt: new Date().toISOString()
         });
 
         // Обновляем локальный баланс
         userBalance -= item.price;
         updateBalanceDisplay();
-        
-        console.log('🎉 Покупка завершена успешно!');
 
-        showNotification(`🎊 Поздравляем! Вы купили "${item.title}" за ${item.price} монет`, 'success');
+        showNotification(`Поздравляем с покупкой "${item.title}"!`, 'success');
         document.getElementById('buy-item-modal').classList.add('hidden');
 
     } catch (error) {
-        console.error('💥 Критическая ошибка при покупке:', error);
+        console.error('Ошибка покупки товара:', error);
         showNotification('Ошибка при покупке товара: ' + error.message, 'error');
     }
 }
@@ -2983,51 +2992,49 @@ async function confirmPurchase(itemId) {
 // ==================== СИСТЕМА БАЛАНСОВ МАРКЕТПЛЕЙСА ====================
 
 // Функция для обновления балансов при покупке
-// Функция для обновления балансов при покупке
 async function updateUserBalances(buyerId, sellerId, price) {
     try {
-        console.log('🔄 Начало обновления балансов:', { buyerId, sellerId, price });
+        console.log('Обновление балансов:', { buyerId, sellerId, price });
         
-        // Получаем текущие балансы
-        const buyerSnapshot = await db.ref('users/' + buyerId + '/balance').once('value');
-        const sellerSnapshot = await db.ref('users/' + sellerId + '/balance').once('value');
+        // Списываем у покупателя
+        const buyerRef = db.ref('users/' + buyerId + '/balance');
+        const buyerSnapshot = await buyerRef.once('value');
+        const currentBuyerBalance = buyerSnapshot.val();
         
-        let buyerBalance = buyerSnapshot.val();
-        let sellerBalance = sellerSnapshot.val();
-        
-        console.log('📊 Текущие балансы:', { buyerBalance, sellerBalance });
-        
-        // Если балансов нет, устанавливаем начальные значения
-        if (buyerBalance === null || buyerBalance === undefined) {
-            buyerBalance = 1000;
-            await db.ref('users/' + buyerId + '/balance').set(1000);
+        // Если баланса нет, устанавливаем 1000
+        let newBuyerBalance;
+        if (currentBuyerBalance === null || currentBuyerBalance === undefined) {
+            newBuyerBalance = 1000 - price;
+        } else {
+            newBuyerBalance = currentBuyerBalance - price;
         }
         
-        if (sellerBalance === null || sellerBalance === undefined) {
-            sellerBalance = 1000;
-            await db.ref('users/' + sellerId + '/balance').set(1000);
+        if (newBuyerBalance < 0) {
+            throw new Error('Недостаточно средств');
         }
         
-        // Проверяем достаточно ли средств у покупателя
-        if (buyerBalance < price) {
-            throw new Error(`Недостаточно средств: ${buyerBalance} < ${price}`);
+        await buyerRef.set(newBuyerBalance);
+
+        // Начисляем продавцу
+        const sellerRef = db.ref('users/' + sellerId + '/balance');
+        const sellerSnapshot = await sellerRef.once('value');
+        const currentSellerBalance = sellerSnapshot.val();
+        
+        // Если баланса нет, устанавливаем 1000
+        let newSellerBalance;
+        if (currentSellerBalance === null || currentSellerBalance === undefined) {
+            newSellerBalance = 1000 + price;
+        } else {
+            newSellerBalance = currentSellerBalance + price;
         }
         
-        // Вычисляем новые балансы
-        const newBuyerBalance = buyerBalance - price;
-        const newSellerBalance = sellerBalance + price;
-        
-        console.log('🆕 Новые балансы:', { newBuyerBalance, newSellerBalance });
-        
-        // Обновляем балансы в базе
-        await db.ref('users/' + buyerId + '/balance').set(newBuyerBalance);
-        await db.ref('users/' + sellerId + '/balance').set(newSellerBalance);
-        
-        console.log('✅ Балансы успешно обновлены');
+        await sellerRef.set(newSellerBalance);
+
+        console.log(`Балансы обновлены: покупатель ${newBuyerBalance}, продавец ${newSellerBalance}`);
         return true;
         
     } catch (error) {
-        console.error('❌ Ошибка обновления балансов:', error);
+        console.error('Ошибка обновления балансов:', error);
         return false;
     }
 }
@@ -3117,105 +3124,17 @@ function deleteItem(itemId) {
     }
 }
 
-// Функция для обновления топа продавцов
-function updateTopSellers() {
-    const container = document.getElementById('top-sellers');
-    if (!container) return;
-    
-    // Простая заглушка - в реальном приложении здесь была бы сложная логика
-    container.innerHTML = `
-        <div class="top-seller">
-            <div class="seller-rank">1</div>
-            <div class="seller-info">
-                <div class="seller-name">Лидер продаж</div>
-                <div class="seller-stats">10 товаров</div>
-            </div>
-        </div>
-        <div class="top-seller">
-            <div class="seller-rank">2</div>
-            <div class="seller-info">
-                <div class="seller-name">Активный продавец</div>
-                <div class="seller-stats">7 товаров</div>
-            </div>
-        </div>
-        <div class="top-seller">
-            <div class="seller-rank">3</div>
-            <div class="seller-info">
-                <div class="seller-name">Новичок</div>
-                <div class="seller-stats">3 товара</div>
-            </div>
-        </div>
-    `;
-}
-
-// Обновляем топ продавцов при загрузке
-function updateTopSellers() {
-    const container = document.getElementById('top-sellers');
-    if (!container) return;
-    
-    const sellers = {};
-    
-    // Считаем товары по продавцам
-    Object.values(marketplaceItems).forEach(item => {
-        if (item.status === 'active') {
-            if (!sellers[item.sellerId]) {
-                sellers[item.sellerId] = {
-                    name: item.sellerName,
-                    avatar: item.sellerAvatar,
-                    count: 0
-                };
-            }
-            sellers[item.sellerId].count++;
-        }
-    });
-    
-    // Сортируем по количеству товаров
-    const topSellers = Object.entries(sellers)
-        .sort(([,a], [,b]) => b.count - a.count)
-        .slice(0, 3);
-    
-    if (topSellers.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Пока нет продавцов</p>';
+// Просмотр профиля продавца
+function viewSellerProfile(sellerId) {
+    // Если это текущий пользователь - показываем его профиль
+    if (currentUser && sellerId === currentUser.uid) {
+        showSection('profile');
         return;
     }
     
-    let html = '';
-    topSellers.forEach(([sellerId, seller], index) => {
-        html += `
-            <div class="top-seller">
-                <div class="seller-rank">${index + 1}</div>
-                <div class="seller-avatar" style="width: 32px; height: 32px; font-size: 0.9rem;">
-                    ${seller.avatar || (seller.name ? seller.name.charAt(0).toUpperCase() : 'U')}
-                </div>
-                <div class="seller-info">
-                    <div class="seller-name">${escapeHtml(seller.name)}</div>
-                    <div class="seller-stats">${seller.count} товаров</div>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
+    // Иначе показываем профиль друга
+    viewFriendProfile(sellerId);
 }
-
-// Обновляем топ продавцов при изменении данных
-function updateMarketplaceStats() {
-    const items = Object.values(marketplaceItems);
-    const activeItems = items.filter(item => item.status === 'active').length;
-    const soldItems = items.filter(item => item.status === 'sold').length;
-    const totalSales = items
-        .filter(item => item.status === 'sold')
-        .reduce((sum, item) => sum + (item.price || 0), 0);
-    
-    document.getElementById('total-items').textContent = items.length;
-    document.getElementById('active-items').textContent = activeItems;
-    document.getElementById('sold-items').textContent = soldItems;
-    document.getElementById('total-sales').textContent = totalSales;
-    
-    // ДОБАВЬТЕ ЭТУ СТРОЧКУ:
-    updateTopSellers();
-}
-
 
 // ==================== МНОГОШАГОВАЯ ФОРМА ДОБАВЛЕНИЯ ТОВАРА ====================
 
@@ -3383,4 +3302,3 @@ function showAddItemModal() {
 }
 
 console.log('Firebase script with FIXED FRIEND STATISTICS loaded successfully');
-
